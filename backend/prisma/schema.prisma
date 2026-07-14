@@ -1,0 +1,87 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        String   @id @default(cuid())
+  username  String   @unique
+  password  String
+  name      String
+  role      String
+  createdAt DateTime @default(now())
+}
+
+model Franchise {
+  id                  String    @id @default(cuid())
+  name                String
+  contact             String    @default("")
+  phone               String    @default("")
+  email               String    @default("")
+  address             String    @default("")
+  createdAt           DateTime  @default(now())
+  createdBy           String
+  lastEmailReminderAt DateTime?
+  orders              Order[]
+  payments            Payment[]
+}
+
+model Order {
+  id          String     @id @default(cuid())
+  franchiseId String
+  franchise   Franchise  @relation(fields: [franchiseId], references: [id], onDelete: Cascade)
+  materials   String     @default("")
+  amount      Float
+  date        String
+  termDays    Int
+  notes       String     @default("")
+  createdAt   DateTime   @default(now())
+  createdBy   String
+  payments    Payment[]
+  reminders   Reminder[]
+}
+
+model Payment {
+  id          String     @id @default(cuid())
+  orderId     String?
+  franchiseId String
+  order       Order?     @relation(fields: [orderId], references: [id], onDelete: SetNull)
+  franchise   Franchise  @relation(fields: [franchiseId], references: [id], onDelete: Cascade)
+  amount      Float
+  date        String
+  method      String
+  reference   String     @default("")
+  notes       String
+  createdAt   DateTime   @default(now())
+  createdBy   String
+}
+
+model Reminder {
+  id          String  @id @default(cuid())
+  orderId     String?
+  franchiseId String
+  order       Order?  @relation(fields: [orderId], references: [id], onDelete: SetNull)
+  date        String
+  by          String
+}
+
+model ActivityLog {
+  id        String   @id @default(cuid())
+  timestamp DateTime @default(now())
+  user      String
+  username  String
+  action    String
+  details   String
+}
+
+model Settings {
+  id                    Int     @id @default(1)
+  termDays              Int     @default(15)
+  graceDays             Int     @default(5)
+  reminderIntervalDays  Int     @default(2)
+  emailRemindersEnabled Boolean @default(true)
+}
