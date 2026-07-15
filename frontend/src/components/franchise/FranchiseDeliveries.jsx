@@ -73,9 +73,9 @@ export default function FranchiseDeliveries({
 
   return (
     <Card>
-      <CardHeader className="flex flex-row items-center justify-between gap-4">
+      <CardHeader className="flex flex-col items-start gap-3 sm:flex-row sm:items-center sm:justify-between">
         <CardTitle>Deliveries &amp; payments</CardTitle>
-        <div className="flex gap-2">
+        <div className="flex w-full flex-wrap gap-2 sm:w-auto">
           <Button
             size="sm"
             variant="secondary"
@@ -174,54 +174,88 @@ export default function FranchiseDeliveries({
           {payments.length === 0 ? (
             <p className="text-sm text-muted-foreground">No payments received yet.</p>
           ) : (
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Date</TableHead>
-                  <TableHead>Method</TableHead>
-                  <TableHead>Reference</TableHead>
-                  <TableHead className="text-right">Amount</TableHead>
-                  <TableHead>By</TableHead>
-                  {isAdmin && <TableHead className="w-20" />}
-                </TableRow>
-              </TableHeader>
-              <TableBody>
+            <>
+              <div className="hidden md:block">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Date</TableHead>
+                      <TableHead>Method</TableHead>
+                      <TableHead>Reference</TableHead>
+                      <TableHead className="text-right">Amount</TableHead>
+                      <TableHead>By</TableHead>
+                      {isAdmin && <TableHead className="w-20" />}
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {payments.map((p) => (
+                      <TableRow key={p.id}>
+                        <TableCell>{fmtDate(p.date)}</TableCell>
+                        <TableCell>{p.method}</TableCell>
+                        <TableCell className="text-muted-foreground">
+                          {formatPaymentReference(p)}
+                        </TableCell>
+                        <TableCell className="text-right font-mono">{fmtMoney(p.amount)}</TableCell>
+                        <TableCell className="text-muted-foreground">{p.createdBy}</TableCell>
+                        {isAdmin && (
+                          <TableCell>
+                            <div className="flex justify-end gap-1">
+                              <Button
+                                size="icon-sm"
+                                variant="ghost"
+                                onClick={() => onEditPayment(p)}
+                                title="Edit payment"
+                              >
+                                <Pencil className="size-3.5" />
+                              </Button>
+                              <Button
+                                size="icon-sm"
+                                variant="ghost"
+                                className="text-destructive hover:text-destructive"
+                                onClick={() => setDeletePaymentTarget(p)}
+                                title="Delete payment"
+                              >
+                                <Trash2 className="size-3.5" />
+                              </Button>
+                            </div>
+                          </TableCell>
+                        )}
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </div>
+
+              <div className="mobile-card-list md:hidden">
                 {payments.map((p) => (
-                  <TableRow key={p.id}>
-                    <TableCell>{fmtDate(p.date)}</TableCell>
-                    <TableCell>{p.method}</TableCell>
-                    <TableCell className="text-muted-foreground">
-                      {formatPaymentReference(p)}
-                    </TableCell>
-                    <TableCell className="text-right font-mono">{fmtMoney(p.amount)}</TableCell>
-                    <TableCell className="text-muted-foreground">{p.createdBy}</TableCell>
+                  <article key={p.id} className="mobile-card mobile-card--flat">
+                    <div className="mobile-card-head">
+                      <div>
+                        <div className="cell-title">{fmtMoney(p.amount)}</div>
+                        <div className="cell-sub">{fmtDate(p.date)} · {p.method}</div>
+                      </div>
+                    </div>
+                    <p className="mobile-card-detail">{formatPaymentReference(p)}</p>
+                    <p className="mobile-card-detail cell-sub">Recorded by {p.createdBy}</p>
                     {isAdmin && (
-                      <TableCell>
-                        <div className="flex justify-end gap-1">
-                          <Button
-                            size="icon-sm"
-                            variant="ghost"
-                            onClick={() => onEditPayment(p)}
-                            title="Edit payment"
-                          >
-                            <Pencil className="size-3.5" />
-                          </Button>
-                          <Button
-                            size="icon-sm"
-                            variant="ghost"
-                            className="text-destructive hover:text-destructive"
-                            onClick={() => setDeletePaymentTarget(p)}
-                            title="Delete payment"
-                          >
-                            <Trash2 className="size-3.5" />
-                          </Button>
-                        </div>
-                      </TableCell>
+                      <div className="mobile-card-foot">
+                        <Button size="sm" variant="ghost" onClick={() => onEditPayment(p)}>
+                          <Pencil className="size-3.5" /> Edit
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          className="text-destructive hover:text-destructive"
+                          onClick={() => setDeletePaymentTarget(p)}
+                        >
+                          <Trash2 className="size-3.5" /> Delete
+                        </Button>
+                      </div>
                     )}
-                  </TableRow>
+                  </article>
                 ))}
-              </TableBody>
-            </Table>
+              </div>
+            </>
           )}
         </div>
       </CardContent>

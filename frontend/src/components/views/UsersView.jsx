@@ -35,10 +35,10 @@ export default function UsersView({ users, currentUser, onAdd, onDelete }) {
       <PageHeader
         title="Employees"
         subtitle="Everyone who can log in and manage franchises."
-        action={<button className="btn btn-primary" onClick={onAdd}><UserPlus size={16} /> Add employee</button>}
+        action={<button className="btn btn-primary page-head-action" onClick={onAdd}><UserPlus size={16} /> Add employee</button>}
       />
       <div className="panel">
-        <table className="ledger">
+        <table className="ledger ledger--desktop">
           <thead>
             <tr>
               <th>Name</th>
@@ -78,6 +78,38 @@ export default function UsersView({ users, currentUser, onAdd, onDelete }) {
             ))}
           </tbody>
         </table>
+
+        <div className="mobile-card-list">
+          {users.map((u) => (
+            <article key={u.id} className="mobile-card mobile-card--flat">
+              <div className="mobile-card-head">
+                <div>
+                  <div className="cell-title">{u.name}</div>
+                  <div className="cell-sub">@{u.username}</div>
+                </div>
+                <span className={`role-pill ${u.role}`}>
+                  {u.role === "admin" ? <ShieldCheck size={12} /> : null} {u.role}
+                </span>
+              </div>
+              <div className="mobile-card-foot">
+                {canDelete(u) ? (
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="text-destructive hover:text-destructive"
+                    onClick={() => setDeleteTarget(u)}
+                  >
+                    <Trash2 className="size-4" /> Remove
+                  </Button>
+                ) : (
+                  <span className="text-xs text-muted-foreground">
+                    {u.id === currentUser.id ? "Your account" : "Protected admin"}
+                  </span>
+                )}
+              </div>
+            </article>
+          ))}
+        </div>
       </div>
       <div className="note-block">
         Admins can add or remove employees. You cannot delete yourself or the only admin account.

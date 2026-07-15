@@ -1,3 +1,5 @@
+import { SERVER_WAKE_UP_MESSAGE, toApiError } from "../lib/apiErrors.js";
+
 const API_BASE = import.meta.env.VITE_API_URL || "/api";
 
 function getToken() {
@@ -11,18 +13,27 @@ export function setToken(token) {
 
 export async function api(path, options = {}) {
   const token = getToken();
-  const res = await fetch(`${API_BASE}${path}`, {
-    ...options,
-    headers: {
-      "Content-Type": "application/json",
-      ...(token && { Authorization: `Bearer ${token}` }),
-      ...options.headers,
-    },
-    body: options.body ? JSON.stringify(options.body) : undefined,
-  });
+  let res;
+
+  try {
+    res = await fetch(`${API_BASE}${path}`, {
+      ...options,
+      headers: {
+        "Content-Type": "application/json",
+        ...(token && { Authorization: `Bearer ${token}` }),
+        ...options.headers,
+      },
+      body: options.body ? JSON.stringify(options.body) : undefined,
+    });
+  } catch (err) {
+    throw new Error(toApiError(err));
+  }
 
   const data = await res.json().catch(() => ({}));
   if (!res.ok) {
+    if ([502, 503, 504].includes(res.status)) {
+      throw new Error(SERVER_WAKE_UP_MESSAGE);
+    }
     throw new Error(data.error || data.message || "Request failed");
   }
   return data;

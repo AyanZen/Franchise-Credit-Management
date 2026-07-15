@@ -24,21 +24,50 @@ export default function Dashboard({ totals, alertFranchises, activityLog, onOpen
           {alertFranchises.length === 0 ? (
             <EmptyState text="Nothing overdue. Every franchise is within terms." />
           ) : (
-            <table className="ledger">
-              <tbody>
+            <>
+              <table className="ledger ledger--desktop">
+                <tbody>
+                  {alertFranchises.slice(0, 6).map((f) => (
+                    <tr key={f.id} onClick={() => onOpenFranchise(f.id)} className="clickable">
+                      <td>
+                        <div className="cell-title">{f.name}</div>
+                        <div className="cell-sub">{f.orderCount} deliveries</div>
+                      </td>
+                      <td className="num">{fmtMoney(f.totalDue)}</td>
+                      <td className="num muted">{f.daysOverdue}d late</td>
+                      <td><Stamp status={f.status} /></td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+              <div className="mobile-card-list mobile-card-list--compact">
                 {alertFranchises.slice(0, 6).map((f) => (
-                  <tr key={f.id} onClick={() => onOpenFranchise(f.id)} className="clickable">
-                    <td>
-                      <div className="cell-title">{f.name}</div>
-                      <div className="cell-sub">{f.orderCount} deliveries</div>
-                    </td>
-                    <td className="num">{fmtMoney(f.totalDue)}</td>
-                    <td className="num muted">{f.daysOverdue}d late</td>
-                    <td><Stamp status={f.status} /></td>
-                  </tr>
+                  <article
+                    key={f.id}
+                    className="mobile-card clickable"
+                    onClick={() => onOpenFranchise(f.id)}
+                  >
+                    <div className="mobile-card-head">
+                      <div>
+                        <div className="cell-title">{f.name}</div>
+                        <div className="cell-sub">{f.orderCount} deliveries</div>
+                      </div>
+                      <Stamp status={f.status} />
+                    </div>
+                    <div className="mobile-card-stats mobile-card-stats--2">
+                      <div className="mobile-stat">
+                        <span className="mobile-stat-label">Due</span>
+                        <span className="mobile-stat-value">{fmtMoney(f.totalDue)}</span>
+                      </div>
+                      <div className="mobile-stat">
+                        <span className="mobile-stat-label">Late</span>
+                        <span className="mobile-stat-value muted">{f.daysOverdue}d</span>
+                      </div>
+                    </div>
+                  </article>
                 ))}
-              </tbody>
-            </table>
+              </div>
+            </>
           )}
         </div>
 

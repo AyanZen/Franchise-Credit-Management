@@ -89,7 +89,7 @@ export default function FranchiseDashboard({
             </p>
           )}
         </div>
-        <div className="flex flex-wrap gap-2">
+        <div className="flex w-full flex-wrap gap-2 sm:w-auto sm:justify-end">
           {isAdmin && (
             <Button variant="destructive" onClick={() => setShowDelete(true)}>
               <Trash2 /> Delete

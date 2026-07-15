@@ -36,7 +36,7 @@ export default function FranchisesList({
       <PageHeader
         title="Franchises"
         subtitle={`${franchises.length} franchise${franchises.length === 1 ? "" : "s"} on record`}
-        action={isAdmin ? <button className="btn btn-primary" onClick={onAdd}><Plus size={16} /> Add franchise</button> : null}
+        action={isAdmin ? <button className="btn btn-primary page-head-action" onClick={onAdd}><Plus size={16} /> Add franchise</button> : null}
       />
       <div className="search-row">
         <Search size={16} />
@@ -46,51 +46,101 @@ export default function FranchisesList({
         {filtered.length === 0 ? (
           <EmptyState text={franchises.length === 0 ? "No franchises yet. Add your first one." : "No matches."} />
         ) : (
-          <table className="ledger">
-            <thead>
-              <tr>
-                <th>Franchise</th>
-                <th className="num">Taken</th>
-                <th className="num">Paid</th>
-                <th className="num">Due</th>
-                <th>Status</th>
-                <th></th>
-              </tr>
-            </thead>
-            <tbody>
-              {filtered.map((f) => (
-                <tr key={f.id} className="clickable" onClick={() => onOpen(f.id)}>
-                  <td>
-                    <div className="cell-title">{f.name}</div>
-                    <div className="cell-sub">{f.contact || "—"}</div>
-                  </td>
-                  <td className="num">{fmtMoney(f.totalTaken)}</td>
-                  <td className="num">{fmtMoney(f.totalPaid)}</td>
-                  <td className="num strong">{fmtMoney(f.totalDue)}</td>
-                  <td><Stamp status={f.status} /></td>
-                  <td>
-                    <div className="flex items-center justify-end gap-1">
-                      {isAdmin && (
-                        <Button
-                          variant="ghost"
-                          size="icon-sm"
-                          className="text-destructive hover:text-destructive"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            setDeleteTarget(f);
-                          }}
-                          title="Delete franchise"
-                        >
-                          <Trash2 className="size-4" />
-                        </Button>
-                      )}
-                      <ChevronRight size={16} className="chev" />
-                    </div>
-                  </td>
+          <>
+            <table className="ledger ledger--desktop">
+              <thead>
+                <tr>
+                  <th>Franchise</th>
+                  <th className="num">Taken</th>
+                  <th className="num">Paid</th>
+                  <th className="num">Due</th>
+                  <th>Status</th>
+                  <th></th>
                 </tr>
+              </thead>
+              <tbody>
+                {filtered.map((f) => (
+                  <tr key={f.id} className="clickable" onClick={() => onOpen(f.id)}>
+                    <td>
+                      <div className="cell-title">{f.name}</div>
+                      <div className="cell-sub">{f.contact || "—"}</div>
+                    </td>
+                    <td className="num">{fmtMoney(f.totalTaken)}</td>
+                    <td className="num">{fmtMoney(f.totalPaid)}</td>
+                    <td className="num strong">{fmtMoney(f.totalDue)}</td>
+                    <td><Stamp status={f.status} /></td>
+                    <td>
+                      <div className="flex items-center justify-end gap-1">
+                        {isAdmin && (
+                          <Button
+                            variant="ghost"
+                            size="icon-sm"
+                            className="text-destructive hover:text-destructive"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setDeleteTarget(f);
+                            }}
+                            title="Delete franchise"
+                          >
+                            <Trash2 className="size-4" />
+                          </Button>
+                        )}
+                        <ChevronRight size={16} className="chev" />
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+
+            <div className="mobile-card-list">
+              {filtered.map((f) => (
+                <article
+                  key={f.id}
+                  className="mobile-card clickable"
+                  onClick={() => onOpen(f.id)}
+                >
+                  <div className="mobile-card-head">
+                    <div>
+                      <div className="cell-title">{f.name}</div>
+                      <div className="cell-sub">{f.contact || "—"}</div>
+                    </div>
+                    <Stamp status={f.status} />
+                  </div>
+                  <div className="mobile-card-stats">
+                    <div className="mobile-stat">
+                      <span className="mobile-stat-label">Taken</span>
+                      <span className="mobile-stat-value">{fmtMoney(f.totalTaken)}</span>
+                    </div>
+                    <div className="mobile-stat">
+                      <span className="mobile-stat-label">Paid</span>
+                      <span className="mobile-stat-value">{fmtMoney(f.totalPaid)}</span>
+                    </div>
+                    <div className="mobile-stat">
+                      <span className="mobile-stat-label">Due</span>
+                      <span className="mobile-stat-value strong">{fmtMoney(f.totalDue)}</span>
+                    </div>
+                  </div>
+                  <div className="mobile-card-foot">
+                    {isAdmin && (
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="text-destructive hover:text-destructive"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setDeleteTarget(f);
+                        }}
+                      >
+                        <Trash2 className="size-4" /> Delete
+                      </Button>
+                    )}
+                    <span className="mobile-card-link">View details <ChevronRight size={14} /></span>
+                  </div>
+                </article>
               ))}
-            </tbody>
-          </table>
+            </div>
+          </>
         )}
       </div>
 

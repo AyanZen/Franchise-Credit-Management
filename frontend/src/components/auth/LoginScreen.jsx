@@ -1,5 +1,6 @@
 import { LogIn } from "lucide-react";
 import { useState } from "react";
+import { isServerWakeUpError } from "@/lib/apiErrors";
 
 export default function LoginScreen({ onLogin }) {
   const [username, setUsername] = useState("");
@@ -9,6 +10,7 @@ export default function LoginScreen({ onLogin }) {
 
   async function submit(e) {
     e.preventDefault();
+    setErr("");
     setBusy(true);
     const error = await onLogin(username.trim(), password);
     setBusy(false);
@@ -35,7 +37,11 @@ export default function LoginScreen({ onLogin }) {
           <input className="input" value={username} onChange={(e) => setUsername(e.target.value)} placeholder="Enter your username" autoFocus />
           <label className="field-label">Password</label>
           <input className="input" type="password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="Enter your password" />
-          {err && <div className="form-error">{err}</div>}
+          {err && (
+            <div className={`form-error${isServerWakeUpError(err) ? " form-error-warm" : ""}`}>
+              {err}
+            </div>
+          )}
           <button className="btn btn-primary btn-block" disabled={busy}>
             {busy ? "Signing in…" : (<><LogIn size={16} /> Sign in</>)}
           </button>
