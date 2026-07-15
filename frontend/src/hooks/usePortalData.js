@@ -33,6 +33,8 @@ export function usePortalData() {
   const [editFranchise, setEditFranchise] = useState(null);
   const [showAddOrderFor, setShowAddOrderFor] = useState(null);
   const [showAddPaymentFor, setShowAddPaymentFor] = useState(null);
+  const [editOrder, setEditOrder] = useState(null);
+  const [editPayment, setEditPayment] = useState(null);
   const [showAddUser, setShowAddUser] = useState(false);
   const [search, setSearch] = useState("");
   const [toast, setToast] = useState(null);
@@ -206,6 +208,52 @@ export function usePortalData() {
     showToast("Payment logged");
   }
 
+  async function updateOrder(id, data) {
+    try {
+      await ordersApi.update(id, data);
+      await refreshData();
+      setEditOrder(null);
+      showToast("Delivery updated");
+    } catch (e) {
+      showToast(e.message);
+      throw e;
+    }
+  }
+
+  async function deleteOrder(id) {
+    try {
+      await ordersApi.remove(id);
+      await refreshData();
+      showToast("Delivery deleted");
+    } catch (e) {
+      showToast(e.message);
+      throw e;
+    }
+  }
+
+  async function updatePayment(id, data) {
+    try {
+      await paymentsApi.update(id, data);
+      await refreshData();
+      setEditPayment(null);
+      showToast("Payment updated");
+    } catch (e) {
+      showToast(e.message);
+      throw e;
+    }
+  }
+
+  async function deletePayment(id) {
+    try {
+      await paymentsApi.remove(id);
+      await refreshData();
+      showToast("Payment deleted");
+    } catch (e) {
+      showToast(e.message);
+      throw e;
+    }
+  }
+
   async function sendReminder(franchise) {
     await remindersApi.create({
       franchiseId: franchise.id,
@@ -261,6 +309,10 @@ export function usePortalData() {
     setShowAddOrderFor,
     showAddPaymentFor,
     setShowAddPaymentFor,
+    editOrder,
+    setEditOrder,
+    editPayment,
+    setEditPayment,
     showAddUser,
     setShowAddUser,
     search,
@@ -281,6 +333,10 @@ export function usePortalData() {
     deleteFranchise,
     addOrder,
     addPayment,
+    updateOrder,
+    deleteOrder,
+    updatePayment,
+    deletePayment,
     sendReminder,
     addUser,
     deleteUser,

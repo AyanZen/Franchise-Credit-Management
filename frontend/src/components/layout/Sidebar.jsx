@@ -1,8 +1,16 @@
 import {
-  Package, Users, Bell, ClipboardList, Settings as SettingsIcon, LogOut, TrendingUp,
+  Package, Users, Bell, ClipboardList, Settings as SettingsIcon, LogOut, TrendingUp, X,
 } from "lucide-react";
 
-export default function Sidebar({ view, setView, currentUser, onLogout, alertCount }) {
+export default function Sidebar({
+  view,
+  setView,
+  currentUser,
+  onLogout,
+  alertCount,
+  mobileOpen,
+  onClose,
+}) {
   const items = [
     { key: "dashboard", label: "Dashboard", icon: TrendingUp },
     { key: "franchises", label: "Franchises", icon: Package },
@@ -13,18 +21,34 @@ export default function Sidebar({ view, setView, currentUser, onLogout, alertCou
     items.push({ key: "users", label: "Employees", icon: Users });
   }
   items.push({ key: "settings", label: "Settings", icon: SettingsIcon });
+
+  function navigate(key) {
+    setView(key);
+    onClose?.();
+  }
+
   return (
-    <aside className="sidebar">
+    <aside className={`sidebar${mobileOpen ? " sidebar--open" : ""}`}>
       <div className="side-top">
         <div className="side-mark">DL</div>
         <div className="side-title">Dispatch Ledger</div>
+        {onClose && (
+          <button
+            type="button"
+            className="sidebar-close-btn"
+            onClick={onClose}
+            aria-label="Close menu"
+          >
+            <X size={20} />
+          </button>
+        )}
       </div>
       <nav>
         {items.map((it) => (
           <button
             key={it.key}
             className={`side-item ${view === it.key ? "active" : ""}`}
-            onClick={() => setView(it.key)}
+            onClick={() => navigate(it.key)}
           >
             <it.icon size={17} />
             <span>{it.label}</span>
@@ -35,7 +59,13 @@ export default function Sidebar({ view, setView, currentUser, onLogout, alertCou
       <div className="side-user">
         <div className="side-user-name">{currentUser.name}</div>
         <div className="side-user-role">{currentUser.role}</div>
-        <button className="btn btn-ghost btn-block" onClick={onLogout}>
+        <button
+          className="btn btn-ghost btn-block"
+          onClick={() => {
+            onClose?.();
+            onLogout();
+          }}
+        >
           <LogOut size={15} /> Log out
         </button>
       </div>

@@ -36,7 +36,7 @@ export default function FranchisesList({
       <PageHeader
         title="Franchises"
         subtitle={`${franchises.length} franchise${franchises.length === 1 ? "" : "s"} on record`}
-        action={<button className="btn btn-primary" onClick={onAdd}><Plus size={16} /> Add franchise</button>}
+        action={isAdmin ? <button className="btn btn-primary" onClick={onAdd}><Plus size={16} /> Add franchise</button> : null}
       />
       <div className="search-row">
         <Search size={16} />

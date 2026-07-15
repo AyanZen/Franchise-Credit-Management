@@ -1,3 +1,4 @@
+import { useEffect, useState } from "react";
 import MotionBackground from "../components/layout/MotionBackground";
 import LoginScreen from "../components/auth/LoginScreen";
 import FranchiseForm from "../components/forms/FranchiseForm";
@@ -5,6 +6,7 @@ import OrderForm from "../components/forms/OrderForm";
 import PaymentForm from "../components/forms/PaymentForm";
 import UserForm from "../components/forms/UserForm";
 import LoadingScreen from "../components/layout/LoadingScreen";
+import MobileHeader from "../components/layout/MobileHeader";
 import Sidebar from "../components/layout/Sidebar";
 import ActivityLogView from "../components/views/ActivityLogView";
 import AlertsView from "../components/views/AlertsView";
@@ -33,6 +35,10 @@ export default function PortalApp() {
     setShowAddOrderFor,
     showAddPaymentFor,
     setShowAddPaymentFor,
+    editOrder,
+    setEditOrder,
+    editPayment,
+    setEditPayment,
     showAddUser,
     setShowAddUser,
     search,
@@ -53,6 +59,10 @@ export default function PortalApp() {
     deleteFranchise,
     addOrder,
     addPayment,
+    updateOrder,
+    deleteOrder,
+    updatePayment,
+    deletePayment,
     sendReminder,
     addUser,
     deleteUser,
@@ -61,6 +71,20 @@ export default function PortalApp() {
   } = usePortalData();
 
   const isAdmin = currentUser?.role === "admin";
+  const [menuOpen, setMenuOpen] = useState(false);
+
+  useEffect(() => {
+    if (!menuOpen) return;
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.body.style.overflow = prev;
+    };
+  }, [menuOpen]);
+
+  useEffect(() => {
+    setMenuOpen(false);
+  }, [view]);
 
   if (loading) {
     return (
@@ -81,8 +105,8 @@ export default function PortalApp() {
   }
 
   const selectedFranchise = franchiseSummaries.find((f) => f.id === selectedFranchiseId);
-  const paymentFranchise = showAddPaymentFor
-    ? franchiseSummaries.find((f) => f.id === showAddPaymentFor)
+  const paymentFranchise = showAddPaymentFor || editPayment
+    ? franchiseSummaries.find((f) => f.id === (showAddPaymentFor || editPayment?.franchiseId))
     : null;
 
   return (
@@ -90,12 +114,23 @@ export default function PortalApp() {
       <MotionBackground />
       <div className="fp-content">
         <div className="shell">
+          {menuOpen && (
+            <button
+              type="button"
+              className="sidebar-overlay sidebar-overlay--visible"
+              onClick={() => setMenuOpen(false)}
+              aria-label="Close menu"
+            />
+          )}
+          <MobileHeader menuOpen={menuOpen} onToggle={() => setMenuOpen((o) => !o)} />
           <Sidebar
             view={view}
             setView={(v) => { setView(v); setSelectedFranchiseId(null); }}
             currentUser={currentUser}
             onLogout={handleLogout}
             alertCount={totals.criticalCount + totals.overdueCount}
+            mobileOpen={menuOpen}
+            onClose={() => setMenuOpen(false)}
           />
           <main className="main view-fade" key={view}>
             {toast && <div className="toast">{toast}</div>}
@@ -134,6 +169,10 @@ export default function PortalApp() {
                 onDelete={deleteFranchise}
                 onAddOrder={() => setShowAddOrderFor(selectedFranchise.id)}
                 onAddPayment={() => setShowAddPaymentFor(selectedFranchise.id)}
+                onEditOrder={(order) => setEditOrder(order)}
+                onDeleteOrder={deleteOrder}
+                onEditPayment={(payment) => setEditPayment(payment)}
+                onDeletePayment={deletePayment}
                 onSendReminder={sendReminder}
                 lastReminderFor={lastReminderFor}
                 reminderCountFor={reminderCountFor}
@@ -173,10 +212,10 @@ export default function PortalApp() {
         </div>
       </div>
 
-      {showAddFranchise && (
+      {showAddFranchise && isAdmin && (
         <FranchiseForm onClose={() => setShowAddFranchise(false)} onSubmit={addFranchise} />
       )}
-      {editFranchise && (
+      {editFranchise && isAdmin && (
         <FranchiseForm
           initial={editFranchise}
           onClose={() => setEditFranchise(null)}
@@ -190,11 +229,27 @@ export default function PortalApp() {
           onSubmit={(data) => addOrder(showAddOrderFor, data)}
         />
       )}
+      {editOrder && (
+        <OrderForm
+          settings={settings}
+          initial={editOrder}
+          onClose={() => setEditOrder(null)}
+          onSubmit={(data) => updateOrder(editOrder.id, data)}
+        />
+      )}
       {showAddPaymentFor && paymentFranchise && (
         <PaymentForm
           franchise={paymentFranchise}
           onClose={() => setShowAddPaymentFor(null)}
           onSubmit={(data) => addPayment(showAddPaymentFor, data)}
+        />
+      )}
+      {editPayment && paymentFranchise && (
+        <PaymentForm
+          franchise={paymentFranchise}
+          initial={editPayment}
+          onClose={() => setEditPayment(null)}
+          onSubmit={(data) => updatePayment(editPayment.id, data)}
         />
       )}
       {showAddUser && (

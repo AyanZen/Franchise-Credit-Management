@@ -1,5 +1,6 @@
 import { useState } from "react";
 import PageHeader from "../common/PageHeader";
+import { validatePassword } from "@/lib/password";
 
 export default function SettingsView({ settings, isAdmin, currentUser, onSave, onChangePassword }) {
   const [termDays, setTermDays] = useState(settings.termDays);
@@ -23,8 +24,9 @@ export default function SettingsView({ settings, isAdmin, currentUser, onSave, o
       setPasswordErr("Fill in all password fields.");
       return;
     }
-    if (newPassword.length < 6) {
-      setPasswordErr("New password must be at least 6 characters.");
+    const passwordError = validatePassword(newPassword);
+    if (passwordError) {
+      setPasswordErr(passwordError);
       return;
     }
     if (newPassword !== confirmPassword) {
@@ -76,8 +78,9 @@ export default function SettingsView({ settings, isAdmin, currentUser, onSave, o
             value={newPassword}
             onChange={(e) => setNewPassword(e.target.value)}
             autoComplete="new-password"
-            minLength={6}
+            minLength={8}
           />
+          <p className="hint-text">At least 8 characters with a letter and a number.</p>
 
           <label className="field-label">Confirm new password</label>
           <input
@@ -86,7 +89,7 @@ export default function SettingsView({ settings, isAdmin, currentUser, onSave, o
             value={confirmPassword}
             onChange={(e) => setConfirmPassword(e.target.value)}
             autoComplete="new-password"
-            minLength={6}
+            minLength={8}
           />
 
           {passwordErr && <div className="form-error">{passwordErr}</div>}

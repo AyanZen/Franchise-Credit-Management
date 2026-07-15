@@ -2,12 +2,12 @@ import { useState } from "react";
 import { todayStr } from "../../utils/date";
 import Modal from "../common/Modal";
 
-export default function OrderForm({ settings, onClose, onSubmit }) {
-  const [materials, setMaterials] = useState("");
-  const [amount, setAmount] = useState("");
-  const [date, setDate] = useState(todayStr());
-  const [termDays, setTermDays] = useState(settings.termDays);
-  const [notes, setNotes] = useState("");
+export default function OrderForm({ settings, initial, onClose, onSubmit }) {
+  const [materials, setMaterials] = useState(initial?.materials || "");
+  const [amount, setAmount] = useState(initial ? String(initial.amount) : "");
+  const [date, setDate] = useState(initial?.date || todayStr());
+  const [termDays, setTermDays] = useState(initial?.termDays ?? settings.termDays);
+  const [notes, setNotes] = useState(initial?.notes || "");
   const [err, setErr] = useState("");
 
   function submit(e) {
@@ -18,7 +18,7 @@ export default function OrderForm({ settings, onClose, onSubmit }) {
   }
 
   return (
-    <Modal title="Record new delivery" onClose={onClose}>
+    <Modal title={initial ? "Edit delivery" : "Record new delivery"} onClose={onClose}>
       <form onSubmit={submit}>
         <label className="field-label">Materials / description</label>
         <input className="input" value={materials} onChange={(e) => setMaterials(e.target.value)} placeholder="e.g. Tiles, adhesive, fittings" autoFocus />
@@ -39,7 +39,7 @@ export default function OrderForm({ settings, onClose, onSubmit }) {
         {err && <div className="form-error">{err}</div>}
         <div className="modal-actions">
           <button type="button" className="btn btn-ghost" onClick={onClose}>Cancel</button>
-          <button className="btn btn-primary">Save delivery</button>
+          <button className="btn btn-primary">{initial ? "Save changes" : "Save delivery"}</button>
         </div>
       </form>
     </Modal>

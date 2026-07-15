@@ -5,7 +5,7 @@ import { logActivity } from "../utils/helpers.js";
 
 const router = Router();
 
-router.post("/", auth, async (req, res) => {
+router.post("/", auth, requireAdmin, async (req, res) => {
   const { name, contact, phone, email, address } = req.body;
   if (!name?.trim()) return res.status(400).json({ error: "Franchise name is required." });
 
@@ -24,7 +24,7 @@ router.post("/", auth, async (req, res) => {
   res.status(201).json(franchise);
 });
 
-router.patch("/:id", auth, async (req, res) => {
+router.patch("/:id", auth, requireAdmin, async (req, res) => {
   const { name, contact, phone, email, address } = req.body;
   if (!name?.trim()) return res.status(400).json({ error: "Franchise name is required." });
 

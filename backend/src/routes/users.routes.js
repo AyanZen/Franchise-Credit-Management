@@ -3,6 +3,7 @@ import bcrypt from "bcryptjs";
 import prisma from "../lib/prisma.js";
 import { auth, requireAdmin, sanitizeUser } from "../middleware/auth.js";
 import { logActivity } from "../utils/helpers.js";
+import { validatePassword } from "../utils/password.js";
 
 const router = Router();
 
@@ -17,6 +18,11 @@ router.post("/", auth, requireAdmin, async (req, res) => {
     return res.status(400).json({ error: "All fields are required." });
   }
 
+  const passwordError = validatePassword(password);
+  if (passwordError) return res.status(400).json({ error: passwordError });
+
+  const roleValue = role === "admin" ? "admin" : "staff";
+
   const existing = await prisma.user.findUnique({ where: { username: username.trim() } });
   if (existing) return res.status(409).json({ error: "Username already exists" });
 
@@ -26,7 +32,7 @@ router.post("/", auth, requireAdmin, async (req, res) => {
       name: name.trim(),
       username: username.trim(),
       password: hashed,
-      role: role || "staff",
+      role: roleValue,
     },
   });
 

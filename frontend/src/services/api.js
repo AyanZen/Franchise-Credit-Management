@@ -22,7 +22,9 @@ export async function api(path, options = {}) {
   });
 
   const data = await res.json().catch(() => ({}));
-  if (!res.ok) throw new Error(data.error || "Request failed");
+  if (!res.ok) {
+    throw new Error(data.error || data.message || "Request failed");
+  }
   return data;
 }
 
@@ -42,10 +44,14 @@ export const franchisesApi = {
 
 export const ordersApi = {
   create: (data) => api("/orders", { method: "POST", body: data }),
+  update: (id, data) => api(`/orders/${id}`, { method: "PATCH", body: data }),
+  remove: (id) => api(`/orders/${id}`, { method: "DELETE" }),
 };
 
 export const paymentsApi = {
   create: (data) => api("/payments", { method: "POST", body: data }),
+  update: (id, data) => api(`/payments/${id}`, { method: "PATCH", body: data }),
+  remove: (id) => api(`/payments/${id}`, { method: "DELETE" }),
 };
 
 export const remindersApi = {

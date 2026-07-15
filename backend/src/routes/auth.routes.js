@@ -2,11 +2,13 @@ import { Router } from "express";
 import bcrypt from "bcryptjs";
 import prisma from "../lib/prisma.js";
 import { auth, signToken, sanitizeUser } from "../middleware/auth.js";
+import { loginLimiter } from "../middleware/rateLimit.js";
 import { fetchBootstrap, logActivity } from "../utils/helpers.js";
+import { validatePassword } from "../utils/password.js";
 
 const router = Router();
 
-router.post("/login", async (req, res) => {
+router.post("/login", loginLimiter, async (req, res) => {
   try {
     const { username, password } = req.body;
     if (!username || !password) {
@@ -57,9 +59,8 @@ router.patch("/password", auth, async (req, res) => {
   if (!currentPassword || !newPassword) {
     return res.status(400).json({ error: "Current and new password are required." });
   }
-  if (newPassword.length < 6) {
-    return res.status(400).json({ error: "New password must be at least 6 characters." });
-  }
+  const passwordError = validatePassword(newPassword);
+  if (passwordError) return res.status(400).json({ error: passwordError });
   if (currentPassword === newPassword) {
     return res.status(400).json({ error: "New password must be different from the current password." });
   }

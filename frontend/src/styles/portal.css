@@ -88,6 +88,93 @@
 
 .fp-app * { box-sizing: border-box; }
 
+/* ── Custom scrollbars — no gray rail, thumb only ── */
+.fp-app {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(17, 17, 17, 0.28) rgba(0, 0, 0, 0);
+}
+
+.fp-app ::-webkit-scrollbar {
+  width: 5px;
+  height: 5px;
+  background: none;
+}
+
+.fp-app ::-webkit-scrollbar-track,
+.fp-app ::-webkit-scrollbar-track-piece,
+.fp-app ::-webkit-scrollbar-track:vertical,
+.fp-app ::-webkit-scrollbar-track:horizontal {
+  background: none;
+  background-color: transparent;
+  border: none;
+  box-shadow: none;
+  -webkit-box-shadow: none;
+}
+
+.fp-app ::-webkit-scrollbar-button,
+.fp-app ::-webkit-scrollbar-button:single-button {
+  display: none;
+  width: 0;
+  height: 0;
+}
+
+.fp-app ::-webkit-scrollbar-thumb {
+  background-color: rgba(17, 17, 17, 0.2);
+  border-radius: 999px;
+  border: 2px solid transparent;
+  background-clip: content-box;
+  min-height: 40px;
+}
+
+.fp-app ::-webkit-scrollbar-thumb:hover {
+  background-color: rgba(17, 17, 17, 0.38);
+}
+
+.fp-app ::-webkit-scrollbar-corner {
+  background: none;
+}
+
+/* Sidebar: hide native scrollbar completely (no rail) */
+.sidebar nav {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+  padding-right: 0;
+}
+
+.sidebar nav::-webkit-scrollbar {
+  display: none;
+  width: 0;
+  height: 0;
+  background: none;
+}
+
+.main,
+.modal,
+.ledger,
+[data-slot="table-container"] {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(17, 17, 17, 0.22) rgba(0, 0, 0, 0);
+}
+
+.main::-webkit-scrollbar,
+.modal::-webkit-scrollbar,
+.ledger::-webkit-scrollbar,
+[data-slot="table-container"]::-webkit-scrollbar {
+  background: none;
+}
+
+.main::-webkit-scrollbar-track,
+.main::-webkit-scrollbar-track-piece,
+.modal::-webkit-scrollbar-track,
+.modal::-webkit-scrollbar-track-piece,
+.ledger::-webkit-scrollbar-track,
+.ledger::-webkit-scrollbar-track-piece,
+[data-slot="table-container"]::-webkit-scrollbar-track,
+[data-slot="table-container"]::-webkit-scrollbar-track-piece {
+  background: none;
+  background-color: transparent;
+}
+
 .fp-content {
   position: relative;
   z-index: 1;
@@ -147,6 +234,25 @@
   gap: 10px;
   padding: 0 8px 28px;
   flex-shrink: 0;
+}
+
+.sidebar-close-btn {
+  display: none;
+  margin-left: auto;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border: none;
+  background: transparent;
+  color: var(--mute);
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+.sidebar-close-btn:hover {
+  background: #f3f4f6;
+  color: var(--text);
 }
 
 .side-mark {
@@ -842,6 +948,15 @@
   color: var(--mute);
 }
 
+/* ── Mobile header ── */
+.mobile-topbar {
+  display: none;
+}
+
+.sidebar-overlay {
+  display: none;
+}
+
 /* ── Responsive ── */
 @media (max-width: 1024px) {
   .card-grid { grid-template-columns: repeat(2, 1fr); }
@@ -849,16 +964,154 @@
 }
 
 @media (max-width: 768px) {
-  .shell { flex-direction: column; }
-  .sidebar {
+  .mobile-topbar {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    position: sticky;
+    top: 0;
+    z-index: 30;
     width: 100%;
-    height: auto;
-    position: static;
-    border-right: none;
+    padding: 12px 16px;
+    background: rgba(255, 255, 255, 0.92);
+    backdrop-filter: blur(12px);
     border-bottom: 1px solid var(--line);
-    overflow: visible;
   }
-  .sidebar nav { flex: none; overflow: visible; }
-  .main { padding: 24px 20px; }
+
+  .mobile-menu-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 40px;
+    height: 40px;
+    border: 1px solid var(--line);
+    background: #fff;
+    color: var(--text);
+    border-radius: 10px;
+    cursor: pointer;
+    flex-shrink: 0;
+  }
+
+  .mobile-menu-btn:hover {
+    background: #f3f4f6;
+  }
+
+  .mobile-topbar-brand {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    min-width: 0;
+  }
+
+  .mobile-topbar-title {
+    font-family: var(--display);
+    font-weight: 600;
+    font-size: 15px;
+    letter-spacing: -0.01em;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .sidebar-overlay {
+    display: block;
+    position: fixed;
+    inset: 0;
+    z-index: 40;
+    border: none;
+    padding: 0;
+    background: rgba(17, 17, 17, 0.35);
+    cursor: pointer;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.2s ease;
+  }
+
+  .sidebar-overlay--visible {
+    opacity: 1;
+    pointer-events: auto;
+  }
+
+  .shell {
+    flex-direction: column;
+    min-height: 100vh;
+  }
+
+  .sidebar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: min(280px, 85vw);
+    height: 100vh;
+    z-index: 50;
+    transform: translateX(-100%);
+    transition: transform 0.25s ease;
+    border-right: 1px solid var(--line);
+    border-bottom: none;
+    box-shadow: 4px 0 24px rgba(0, 0, 0, 0.08);
+  }
+
+  .sidebar.sidebar--open {
+    transform: translateX(0);
+  }
+
+  .sidebar nav {
+    flex: 1;
+    min-height: 0;
+    overflow-y: auto;
+  }
+
+  .sidebar-close-btn {
+    display: inline-flex;
+  }
+
+  .main {
+    width: 100%;
+    max-width: none;
+    padding: 20px 16px 32px;
+  }
+
+  .page-head {
+    flex-direction: column;
+    align-items: flex-start;
+    margin-bottom: 24px;
+  }
+
+  .page-head h1 {
+    font-size: 26px;
+  }
+
   .card-grid { grid-template-columns: 1fr 1fr; }
+
+  .ledger {
+    display: block;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .ledger thead,
+  .ledger tbody,
+  .ledger tr {
+    display: table;
+    width: 100%;
+    table-layout: fixed;
+  }
+
+  .login-wrap {
+    padding: 32px 16px;
+  }
+
+  .login-card {
+    padding: 24px 20px;
+  }
+
+  .toast {
+    left: 16px;
+    right: 16px;
+    max-width: none;
+  }
+}
+
+@media (max-width: 480px) {
+  .card-grid { grid-template-columns: 1fr; }
 }

@@ -13,19 +13,19 @@ const METHOD_ICONS = {
   Online: CreditCard,
 };
 
-export default function PaymentForm({ franchise, onClose, onSubmit }) {
-  const [amount, setAmount] = useState("");
-  const [date, setDate] = useState(todayStr());
-  const [method, setMethod] = useState("Cash");
-  const [reference, setReference] = useState("");
+export default function PaymentForm({ franchise, initial, onClose, onSubmit }) {
+  const [amount, setAmount] = useState(initial ? String(initial.amount) : "");
+  const [date, setDate] = useState(initial?.date || todayStr());
+  const [method, setMethod] = useState(initial?.method || "Cash");
+  const [reference, setReference] = useState(initial?.reference || "");
   const [err, setErr] = useState("");
   const [busy, setBusy] = useState(false);
 
   const balanceDue = franchise?.totalDue ?? 0;
 
   useEffect(() => {
-    if (balanceDue > 0) setAmount(String(balanceDue));
-  }, [balanceDue]);
+    if (!initial && balanceDue > 0) setAmount(String(balanceDue));
+  }, [balanceDue, initial]);
 
   const paymentAmount = Number(amount) || 0;
   const balanceAfter = Math.max(balanceDue - paymentAmount, 0);
@@ -59,7 +59,7 @@ export default function PaymentForm({ franchise, onClose, onSubmit }) {
     }
   }
 
-  if (balanceDue <= 0) {
+  if (!initial && balanceDue <= 0) {
     return (
       <Modal title="Record payment received" onClose={onClose}>
         <p className="text-sm text-muted-foreground py-4">
@@ -73,7 +73,7 @@ export default function PaymentForm({ franchise, onClose, onSubmit }) {
   }
 
   return (
-    <Modal title="Record payment received" onClose={onClose} wide>
+    <Modal title={initial ? "Edit payment" : "Record payment received"} onClose={onClose} wide>
       <form onSubmit={submit}>
         <div className="mb-4 rounded-md bg-muted/60 px-3 py-2 text-sm">
           <div className="flex justify-between">
@@ -167,7 +167,7 @@ export default function PaymentForm({ franchise, onClose, onSubmit }) {
         <div className="modal-actions">
           <Button type="button" variant="outline" onClick={onClose} disabled={busy}>Cancel</Button>
           <Button type="submit" disabled={busy}>
-            {busy ? "Saving…" : "Save payment"}
+            {busy ? "Saving…" : initial ? "Save changes" : "Save payment"}
           </Button>
         </div>
       </form>

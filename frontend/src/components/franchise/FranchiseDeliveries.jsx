@@ -1,9 +1,11 @@
-import { Plus, IndianRupee, AlertTriangle, Send } from "lucide-react";
+import { useState } from "react";
+import { Plus, IndianRupee, AlertTriangle, Send, Pencil, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from "@/components/ui/table";
+import ConfirmDeleteDialog from "@/components/common/ConfirmDeleteDialog";
 import { fmtDate, fmtMoney } from "@/utils/format";
 import { formatPaymentReference } from "@/lib/payment";
 
@@ -11,15 +13,50 @@ export default function FranchiseDeliveries({
   franchise,
   orders,
   payments,
+  isAdmin,
   onAddOrder,
   onAddPayment,
+  onEditOrder,
+  onDeleteOrder,
+  onEditPayment,
+  onDeletePayment,
   onSendReminder,
   lastReminderFor,
   reminderCountFor,
 }) {
+  const [deleteOrderTarget, setDeleteOrderTarget] = useState(null);
+  const [deletePaymentTarget, setDeletePaymentTarget] = useState(null);
+  const [deleting, setDeleting] = useState(false);
+
   const last = lastReminderFor(franchise.id);
   const remCount = reminderCountFor(franchise.id);
   const isOverdue = franchise.status === "overdue" || franchise.status === "critical";
+
+  async function confirmDeleteOrder() {
+    if (!deleteOrderTarget) return;
+    setDeleting(true);
+    try {
+      await onDeleteOrder(deleteOrderTarget.id);
+      setDeleteOrderTarget(null);
+    } catch {
+      /* toast in hook */
+    } finally {
+      setDeleting(false);
+    }
+  }
+
+  async function confirmDeletePayment() {
+    if (!deletePaymentTarget) return;
+    setDeleting(true);
+    try {
+      await onDeletePayment(deletePaymentTarget.id);
+      setDeletePaymentTarget(null);
+    } catch {
+      /* toast in hook */
+    } finally {
+      setDeleting(false);
+    }
+  }
 
   if (orders.length === 0) {
     return (
@@ -101,7 +138,30 @@ export default function FranchiseDeliveries({
                     Dispatched {fmtDate(o.date)}
                   </p>
                 </div>
-                <p className="font-mono text-sm font-medium">{fmtMoney(o.amount)}</p>
+                <div className="flex items-center gap-2">
+                  <p className="font-mono text-sm font-medium">{fmtMoney(o.amount)}</p>
+                  {isAdmin && (
+                    <div className="flex gap-1">
+                      <Button
+                        size="icon-sm"
+                        variant="ghost"
+                        onClick={() => onEditOrder(o)}
+                        title="Edit delivery"
+                      >
+                        <Pencil className="size-3.5" />
+                      </Button>
+                      <Button
+                        size="icon-sm"
+                        variant="ghost"
+                        className="text-destructive hover:text-destructive"
+                        onClick={() => setDeleteOrderTarget(o)}
+                        title="Delete delivery"
+                      >
+                        <Trash2 className="size-3.5" />
+                      </Button>
+                    </div>
+                  )}
+                </div>
               </div>
             ))}
           </div>
@@ -122,6 +182,7 @@ export default function FranchiseDeliveries({
                   <TableHead>Reference</TableHead>
                   <TableHead className="text-right">Amount</TableHead>
                   <TableHead>By</TableHead>
+                  {isAdmin && <TableHead className="w-20" />}
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -134,6 +195,29 @@ export default function FranchiseDeliveries({
                     </TableCell>
                     <TableCell className="text-right font-mono">{fmtMoney(p.amount)}</TableCell>
                     <TableCell className="text-muted-foreground">{p.createdBy}</TableCell>
+                    {isAdmin && (
+                      <TableCell>
+                        <div className="flex justify-end gap-1">
+                          <Button
+                            size="icon-sm"
+                            variant="ghost"
+                            onClick={() => onEditPayment(p)}
+                            title="Edit payment"
+                          >
+                            <Pencil className="size-3.5" />
+                          </Button>
+                          <Button
+                            size="icon-sm"
+                            variant="ghost"
+                            className="text-destructive hover:text-destructive"
+                            onClick={() => setDeletePaymentTarget(p)}
+                            title="Delete payment"
+                          >
+                            <Trash2 className="size-3.5" />
+                          </Button>
+                        </div>
+                      </TableCell>
+                    )}
                   </TableRow>
                 ))}
               </TableBody>
@@ -141,6 +225,24 @@ export default function FranchiseDeliveries({
           )}
         </div>
       </CardContent>
+
+      <ConfirmDeleteDialog
+        open={!!deleteOrderTarget}
+        onOpenChange={(open) => !open && setDeleteOrderTarget(null)}
+        title="Delete this delivery?"
+        description={`This removes the delivery of ${fmtMoney(deleteOrderTarget?.amount || 0)} from ${fmtDate(deleteOrderTarget?.date || "")}. This cannot be undone.`}
+        onConfirm={confirmDeleteOrder}
+        loading={deleting}
+      />
+
+      <ConfirmDeleteDialog
+        open={!!deletePaymentTarget}
+        onOpenChange={(open) => !open && setDeletePaymentTarget(null)}
+        title="Delete this payment?"
+        description={`This removes the ${deletePaymentTarget?.method || ""} payment of ${fmtMoney(deletePaymentTarget?.amount || 0)} from ${fmtDate(deletePaymentTarget?.date || "")}. This cannot be undone.`}
+        onConfirm={confirmDeletePayment}
+        loading={deleting}
+      />
     </Card>
   );
 }

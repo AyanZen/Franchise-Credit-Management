@@ -35,6 +35,10 @@ export default function FranchiseDashboard({
   onDelete,
   onAddOrder,
   onAddPayment,
+  onEditOrder,
+  onDeleteOrder,
+  onEditPayment,
+  onDeletePayment,
   onSendReminder,
   lastReminderFor,
   reminderCountFor,
@@ -85,15 +89,17 @@ export default function FranchiseDashboard({
             </p>
           )}
         </div>
-        <div className="flex gap-2">
+        <div className="flex flex-wrap gap-2">
           {isAdmin && (
             <Button variant="destructive" onClick={() => setShowDelete(true)}>
               <Trash2 /> Delete
             </Button>
           )}
-          <Button variant="outline" onClick={onEdit}>
-            <Pencil /> Edit
-          </Button>
+          {isAdmin && (
+            <Button variant="outline" onClick={onEdit}>
+              <Pencil /> Edit
+            </Button>
+          )}
           <Button onClick={onAddOrder}>
             <Plus /> New delivery
           </Button>
@@ -183,8 +189,13 @@ export default function FranchiseDashboard({
         franchise={franchise}
         orders={orders}
         payments={payments}
+        isAdmin={isAdmin}
         onAddOrder={onAddOrder}
         onAddPayment={onAddPayment}
+        onEditOrder={onEditOrder}
+        onDeleteOrder={onDeleteOrder}
+        onEditPayment={onEditPayment}
+        onDeletePayment={onDeletePayment}
         onSendReminder={onSendReminder}
         lastReminderFor={lastReminderFor}
         reminderCountFor={reminderCountFor}

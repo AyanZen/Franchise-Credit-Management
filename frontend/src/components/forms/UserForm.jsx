@@ -1,5 +1,6 @@
 import { useState } from "react";
 import Modal from "../common/Modal";
+import { validatePassword } from "@/lib/password";
 
 export default function UserForm({ onClose, onSubmit }) {
   const [name, setName] = useState("");
@@ -11,6 +12,8 @@ export default function UserForm({ onClose, onSubmit }) {
   function submit(e) {
     e.preventDefault();
     if (!name.trim() || !username.trim() || !password) { setErr("All fields are required."); return; }
+    const passwordError = validatePassword(password);
+    if (passwordError) { setErr(passwordError); return; }
     onSubmit({ name: name.trim(), username: username.trim(), password, role });
   }
 
@@ -23,6 +26,7 @@ export default function UserForm({ onClose, onSubmit }) {
         <input className="input" value={username} onChange={(e) => setUsername(e.target.value)} />
         <label className="field-label">Password *</label>
         <input className="input" type="password" value={password} onChange={(e) => setPassword(e.target.value)} />
+        <p className="hint-text">At least 8 characters with a letter and a number.</p>
         <label className="field-label">Role</label>
         <select className="input" value={role} onChange={(e) => setRole(e.target.value)}>
           <option value="staff">Staff</option>
