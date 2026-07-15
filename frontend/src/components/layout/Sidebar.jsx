@@ -11,8 +11,8 @@ export default function Sidebar({ view, setView, currentUser, onLogout, alertCou
   ];
   if (currentUser.role === "admin") {
     items.push({ key: "users", label: "Employees", icon: Users });
-    items.push({ key: "settings", label: "Settings", icon: SettingsIcon });
   }
+  items.push({ key: "settings", label: "Settings", icon: SettingsIcon });
   return (
     <aside className="sidebar">
       <div className="side-top">

@@ -1,4 +1,4 @@
-const API_BASE = "/api";
+const API_BASE = import.meta.env.VITE_API_URL || "/api";
 
 function getToken() {
   return localStorage.getItem("token");
@@ -30,6 +30,8 @@ export const authApi = {
   login: (username, password) => api("/auth/login", { method: "POST", body: { username, password } }),
   logout: () => api("/auth/logout", { method: "POST" }),
   bootstrap: () => api("/auth/bootstrap"),
+  changePassword: (currentPassword, newPassword) =>
+    api("/auth/password", { method: "PATCH", body: { currentPassword, newPassword } }),
 };
 
 export const franchisesApi = {

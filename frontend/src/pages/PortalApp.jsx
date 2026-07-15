@@ -57,6 +57,7 @@ export default function PortalApp() {
     addUser,
     deleteUser,
     saveSettings,
+    changePassword,
   } = usePortalData();
 
   const isAdmin = currentUser?.role === "admin";
@@ -159,8 +160,14 @@ export default function PortalApp() {
               />
             )}
 
-            {view === "settings" && currentUser.role === "admin" && (
-              <SettingsView settings={settings} onSave={saveSettings} />
+            {view === "settings" && (
+              <SettingsView
+                settings={settings}
+                isAdmin={isAdmin}
+                currentUser={currentUser}
+                onSave={saveSettings}
+                onChangePassword={changePassword}
+              />
             )}
           </main>
         </div>

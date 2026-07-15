@@ -5,8 +5,11 @@
   "type": "module",
   "scripts": {
     "dev": "node --watch src/index.js",
+    "build": "prisma generate",
     "start": "node src/index.js",
+    "postinstall": "prisma generate",
     "db:migrate": "prisma migrate dev",
+    "db:migrate:deploy": "prisma migrate deploy",
     "db:seed": "node prisma/seed.js",
     "db:studio": "prisma studio"
   },
@@ -20,9 +23,7 @@
     "dotenv": "^16.5.0",
     "express": "^5.1.0",
     "jsonwebtoken": "^9.0.2",
-    "nodemailer": "^9.0.3"
-  },
-  "devDependencies": {
+    "nodemailer": "^9.0.3",
     "prisma": "^6.9.0"
   }
 }

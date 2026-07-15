@@ -234,6 +234,16 @@ export function usePortalData() {
     showToast("Settings saved");
   }
 
+  async function changePassword(currentPassword, newPassword) {
+    try {
+      await authApi.changePassword(currentPassword, newPassword);
+      showToast("Password updated");
+      return null;
+    } catch (e) {
+      return e.message;
+    }
+  }
+
   return {
     loading,
     users,
@@ -275,5 +285,6 @@ export function usePortalData() {
     addUser,
     deleteUser,
     saveSettings,
+    changePassword,
   };
 }
