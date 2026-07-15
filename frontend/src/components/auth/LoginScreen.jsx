@@ -40,9 +40,6 @@ export default function LoginScreen({ onLogin }) {
             {busy ? "Signing in…" : (<><LogIn size={16} /> Sign in</>)}
           </button>
         </form>
-        <div className="login-hint">
-          First time? Use <b>admin</b> / <b>admin123</b>
-        </div>
       </div>
 
       <p className="login-trust">Built for franchise material &amp; payment management</p>
