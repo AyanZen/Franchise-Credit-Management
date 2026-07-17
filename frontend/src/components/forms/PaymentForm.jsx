@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { Banknote, CreditCard, FileText } from "lucide-react";
 import { todayStr } from "@/utils/date";
-import { fmtMoney } from "@/utils/format";
+import { fmtMoney, fmtDate } from "@/utils/format";
 import { PAYMENT_METHODS } from "@/lib/payment";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -13,7 +13,7 @@ const METHOD_ICONS = {
   Online: CreditCard,
 };
 
-export default function PaymentForm({ franchise, initial, onClose, onSubmit }) {
+export default function PaymentForm({ franchise, order, initial, onClose, onSubmit }) {
   const [amount, setAmount] = useState(initial ? String(initial.amount) : "");
   const [date, setDate] = useState(initial?.date || todayStr());
   const [method, setMethod] = useState(initial?.method || "Cash");
@@ -21,7 +21,9 @@ export default function PaymentForm({ franchise, initial, onClose, onSubmit }) {
   const [err, setErr] = useState("");
   const [busy, setBusy] = useState(false);
 
-  const balanceDue = franchise?.totalDue ?? 0;
+  const balanceDue = order
+    ? (order.due ?? 0) + (initial?.orderId === order.id ? Number(initial.amount) || 0 : 0)
+    : (franchise?.totalDue ?? 0);
 
   useEffect(() => {
     if (!initial && balanceDue > 0) setAmount(String(balanceDue));
@@ -44,6 +46,10 @@ export default function PaymentForm({ franchise, initial, onClose, onSubmit }) {
     if (!amount || Number(amount) <= 0) { setErr("Enter a valid amount."); return; }
     if (method === "Cheque" && !reference.trim()) { setErr("Cheque number is required."); return; }
     if (method === "Online" && !reference.trim()) { setErr("Transaction ID is required."); return; }
+    if (order && paymentAmount > balanceDue + 0.01) {
+      setErr("Amount exceeds this delivery's balance due.");
+      return;
+    }
 
     setBusy(true);
     try {
@@ -61,9 +67,11 @@ export default function PaymentForm({ franchise, initial, onClose, onSubmit }) {
 
   if (!initial && balanceDue <= 0) {
     return (
-      <Modal title="Record payment received" onClose={onClose}>
+      <Modal title={order ? "Record delivery payment" : "Record payment received"} onClose={onClose}>
         <p className="text-sm text-muted-foreground py-4">
-          No outstanding balance. All deliveries are fully paid.
+          {order
+            ? "This delivery is fully paid."
+            : "No outstanding balance. All deliveries are fully paid."}
         </p>
         <div className="modal-actions">
           <button type="button" className="btn btn-ghost" onClick={onClose}>Close</button>
@@ -72,12 +80,29 @@ export default function PaymentForm({ franchise, initial, onClose, onSubmit }) {
     );
   }
 
+  const title = initial
+    ? "Edit payment"
+    : order
+      ? "Record payment for delivery"
+      : "Record account payment";
+
   return (
-    <Modal title={initial ? "Edit payment" : "Record payment received"} onClose={onClose} wide>
+    <Modal title={title} onClose={onClose} wide>
       <form onSubmit={submit}>
+        {order && (
+          <div className="mb-4 rounded-md border border-border bg-muted/40 px-3 py-2 text-sm">
+            <p className="font-medium">{order.materials || "Materials dispatch"}</p>
+            <p className="text-muted-foreground">
+              Dispatched {fmtDate(order.date)} · Delivery amount {fmtMoney(order.amount)}
+            </p>
+          </div>
+        )}
+
         <div className="mb-4 rounded-md bg-muted/60 px-3 py-2 text-sm">
           <div className="flex justify-between">
-            <span className="text-muted-foreground">Account balance due</span>
+            <span className="text-muted-foreground">
+              {order ? "Balance due on this delivery" : "Account balance due"}
+            </span>
             <span className="font-mono font-medium">{fmtMoney(balanceDue)}</span>
           </div>
           {paymentAmount > 0 && (
@@ -105,7 +130,9 @@ export default function PaymentForm({ franchise, initial, onClose, onSubmit }) {
 
           <TabsContent value="Cash" className="space-y-3 pt-4">
             <p className="text-sm text-muted-foreground">
-              Payment reduces the combined franchise balance automatically.
+              {order
+                ? "Payment is recorded against this delivery."
+                : "Payment reduces the combined franchise balance."}
             </p>
           </TabsContent>
 
@@ -142,13 +169,15 @@ export default function PaymentForm({ franchise, initial, onClose, onSubmit }) {
               onChange={(e) => setAmount(e.target.value)}
               placeholder="0"
             />
-            <button
-              type="button"
-              className="mt-1 text-xs text-primary hover:underline"
-              onClick={() => setAmount(String(balanceDue))}
-            >
-              Use full balance ({fmtMoney(balanceDue)})
-            </button>
+            {!initial && balanceDue > 0 && (
+              <button
+                type="button"
+                className="mt-1 text-xs text-primary hover:underline"
+                onClick={() => setAmount(String(balanceDue))}
+              >
+                Use full {order ? "delivery" : "account"} balance ({fmtMoney(balanceDue)})
+              </button>
+            )}
           </div>
           <div>
             <label className="field-label">Date received</label>
@@ -156,9 +185,14 @@ export default function PaymentForm({ franchise, initial, onClose, onSubmit }) {
           </div>
         </div>
 
-        {isOverpay && (
+        {isOverpay && !order && (
           <p className="text-sm text-amber-600">
             Payment exceeds the outstanding balance. Extra amount will be recorded as credit.
+          </p>
+        )}
+        {isOverpay && order && (
+          <p className="text-sm text-amber-600">
+            Amount exceeds this delivery&apos;s balance due.
           </p>
         )}
 

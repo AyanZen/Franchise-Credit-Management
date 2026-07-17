@@ -1229,7 +1229,48 @@
   }
 
   .mobile-card-list {
-    display: block;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    padding: 16px;
+  }
+
+  .mobile-card {
+    padding: 18px;
+    border: 1px solid var(--line);
+    border-radius: 14px;
+    background: #fff;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+  }
+
+  .mobile-card:last-child {
+    border-bottom: 1px solid var(--line);
+  }
+
+  .mobile-card-head {
+    margin-bottom: 14px;
+  }
+
+  .mobile-card-stats {
+    gap: 12px;
+    padding-top: 4px;
+  }
+
+  .mobile-card-foot {
+    margin-top: 14px;
+    padding-top: 14px;
+  }
+
+  .mobile-card-list--compact {
+    gap: 12px;
+  }
+
+  .mobile-card-list--compact .mobile-card {
+    padding: 16px;
+  }
+
+  .panel .mobile-card-list {
+    padding: 12px 16px 16px;
   }
 
   .search-row {

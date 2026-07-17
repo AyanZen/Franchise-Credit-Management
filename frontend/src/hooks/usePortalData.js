@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo, useCallback } from "react";
-import { computeFranchiseLedger, enrichOrders } from "../lib/franchiseLedger";
+import { computeFranchiseLedger, enrichOrdersWithPayments } from "../lib/franchiseLedger";
 import {
   authApi, setToken, franchisesApi, ordersApi, paymentsApi,
   remindersApi, usersApi, settingsApi,
@@ -33,6 +33,7 @@ export function usePortalData() {
   const [editFranchise, setEditFranchise] = useState(null);
   const [showAddOrderFor, setShowAddOrderFor] = useState(null);
   const [showAddPaymentFor, setShowAddPaymentFor] = useState(null);
+  const [paymentForOrderId, setPaymentForOrderId] = useState(null);
   const [editOrder, setEditOrder] = useState(null);
   const [editPayment, setEditPayment] = useState(null);
   const [showAddUser, setShowAddUser] = useState(false);
@@ -87,19 +88,15 @@ export function usePortalData() {
     return map;
   }, [payments]);
 
-  const ordersWithMeta = useMemo(
-    () => enrichOrders(orders, settings),
-    [orders, settings]
-  );
-
   const ordersByFranchise = useMemo(() => {
     const map = {};
-    ordersWithMeta.forEach((o) => {
-      if (!map[o.franchiseId]) map[o.franchiseId] = [];
-      map[o.franchiseId].push(o);
+    franchises.forEach((f) => {
+      const fOrders = orders.filter((o) => o.franchiseId === f.id);
+      const fPayments = payments.filter((p) => p.franchiseId === f.id);
+      map[f.id] = enrichOrdersWithPayments(fOrders, fPayments, settings);
     });
     return map;
-  }, [ordersWithMeta]);
+  }, [franchises, orders, payments, settings]);
 
   const franchiseSummaries = useMemo(() => {
     return franchises.map((f) => {
@@ -201,11 +198,25 @@ export function usePortalData() {
     showToast("Delivery recorded");
   }
 
-  async function addPayment(franchiseId, data) {
-    await paymentsApi.create({ franchiseId, ...data });
-    await refreshData();
+  function openPaymentForm(franchiseId, orderId = null) {
+    setShowAddPaymentFor(franchiseId);
+    setPaymentForOrderId(orderId);
+  }
+
+  function closePaymentForm() {
     setShowAddPaymentFor(null);
-    showToast("Payment logged");
+    setPaymentForOrderId(null);
+  }
+
+  async function addPayment(franchiseId, data) {
+    await paymentsApi.create({
+      franchiseId,
+      orderId: paymentForOrderId || undefined,
+      ...data,
+    });
+    await refreshData();
+    closePaymentForm();
+    showToast(paymentForOrderId ? "Delivery payment logged" : "Payment logged");
   }
 
   async function updateOrder(id, data) {
@@ -309,6 +320,9 @@ export function usePortalData() {
     setShowAddOrderFor,
     showAddPaymentFor,
     setShowAddPaymentFor,
+    paymentForOrderId,
+    openPaymentForm,
+    closePaymentForm,
     editOrder,
     setEditOrder,
     editPayment,

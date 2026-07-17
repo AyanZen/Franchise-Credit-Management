@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { Plus, IndianRupee, AlertTriangle, Send, Pencil, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -8,6 +8,8 @@ import {
 import ConfirmDeleteDialog from "@/components/common/ConfirmDeleteDialog";
 import { fmtDate, fmtMoney } from "@/utils/format";
 import { formatPaymentReference } from "@/lib/payment";
+import { orderLabel } from "@/lib/franchiseLedger";
+import StatusBadge from "./StatusBadge";
 
 export default function FranchiseDeliveries({
   franchise,
@@ -27,6 +29,12 @@ export default function FranchiseDeliveries({
   const [deleteOrderTarget, setDeleteOrderTarget] = useState(null);
   const [deletePaymentTarget, setDeletePaymentTarget] = useState(null);
   const [deleting, setDeleting] = useState(false);
+
+  const orderById = useMemo(() => {
+    const map = {};
+    orders.forEach((o) => { map[o.id] = o; });
+    return map;
+  }, [orders]);
 
   const last = lastReminderFor(franchise.id);
   const remCount = reminderCountFor(franchise.id);
@@ -58,6 +66,11 @@ export default function FranchiseDeliveries({
     }
   }
 
+  function paymentForLabel(payment) {
+    if (!payment.orderId) return "Account payment";
+    return orderLabel(orderById[payment.orderId]);
+  }
+
   if (orders.length === 0) {
     return (
       <Card>
@@ -79,10 +92,10 @@ export default function FranchiseDeliveries({
           <Button
             size="sm"
             variant="secondary"
-            onClick={onAddPayment}
+            onClick={() => onAddPayment()}
             disabled={franchise.totalDue <= 0}
           >
-            <IndianRupee /> Record payment
+            <IndianRupee /> Account payment
           </Button>
           <Button size="sm" onClick={onAddOrder}>
             <Plus /> New delivery
@@ -126,42 +139,95 @@ export default function FranchiseDeliveries({
           <h4 className="mb-3 text-sm font-medium text-muted-foreground uppercase tracking-wide">
             Delivery history
           </h4>
-          <div className="space-y-2">
+          <div className="flex flex-col gap-4">
             {orders.map((o) => (
               <div
                 key={o.id}
-                className="flex flex-wrap items-center justify-between gap-3 rounded-lg border px-4 py-3"
+                className="rounded-xl border bg-card p-4 shadow-sm"
               >
-                <div>
-                  <p className="font-medium">{o.materials || "Materials dispatch"}</p>
-                  <p className="text-xs text-muted-foreground">
-                    Dispatched {fmtDate(o.date)}
-                  </p>
-                </div>
-                <div className="flex items-center gap-2">
-                  <p className="font-mono text-sm font-medium">{fmtMoney(o.amount)}</p>
-                  {isAdmin && (
-                    <div className="flex gap-1">
-                      <Button
-                        size="icon-sm"
-                        variant="ghost"
-                        onClick={() => onEditOrder(o)}
-                        title="Edit delivery"
-                      >
-                        <Pencil className="size-3.5" />
-                      </Button>
-                      <Button
-                        size="icon-sm"
-                        variant="ghost"
-                        className="text-destructive hover:text-destructive"
-                        onClick={() => setDeleteOrderTarget(o)}
-                        title="Delete delivery"
-                      >
-                        <Trash2 className="size-3.5" />
-                      </Button>
+                <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+                  <div className="min-w-0 flex-1 space-y-2">
+                    <div className="flex flex-wrap items-center gap-2">
+                      <p className="font-medium">{o.materials || "Materials dispatch"}</p>
+                      <StatusBadge status={o.status} />
                     </div>
-                  )}
+                    <p className="text-xs text-muted-foreground">
+                      Dispatched {fmtDate(o.date)} · Term {o.termDays} days
+                    </p>
+                    <div className="flex flex-wrap gap-4 text-sm">
+                      <span>Amount <strong className="font-mono">{fmtMoney(o.amount)}</strong></span>
+                      <span className="text-emerald-600">Paid <strong className="font-mono">{fmtMoney(o.totalPaid ?? 0)}</strong></span>
+                      <span className={o.due > 0 ? "text-amber-600" : ""}>
+                        Due <strong className="font-mono">{fmtMoney(o.due ?? 0)}</strong>
+                      </span>
+                    </div>
+                  </div>
+                  <div className="flex flex-wrap gap-2">
+                    <Button
+                      size="sm"
+                      variant="secondary"
+                      onClick={() => onAddPayment(o.id)}
+                      disabled={(o.due ?? 0) <= 0}
+                    >
+                      <IndianRupee /> Record payment
+                    </Button>
+                    {isAdmin && (
+                      <>
+                        <Button size="sm" variant="ghost" onClick={() => onEditOrder(o)}>
+                          <Pencil className="size-3.5" /> Edit
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          className="text-destructive hover:text-destructive"
+                          onClick={() => setDeleteOrderTarget(o)}
+                        >
+                          <Trash2 className="size-3.5" /> Delete
+                        </Button>
+                      </>
+                    )}
+                  </div>
                 </div>
+
+                {(o.payments?.length ?? 0) > 0 && (
+                  <div className="mt-4 border-t border-border pt-3">
+                    <p className="mb-2 text-xs font-semibold tracking-wide text-muted-foreground uppercase">
+                      Payments for this delivery
+                    </p>
+                    <ul className="space-y-2">
+                      {o.payments.map((p) => (
+                        <li
+                          key={p.id}
+                          className="flex flex-wrap items-center justify-between gap-2 rounded-lg bg-muted/40 px-3 py-2 text-sm"
+                        >
+                          <div>
+                            <span className="font-mono font-medium">{fmtMoney(p.amount)}</span>
+                            <span className="mx-2 text-muted-foreground">·</span>
+                            <span>{fmtDate(p.date)}</span>
+                            <span className="mx-2 text-muted-foreground">·</span>
+                            <span>{p.method}</span>
+                            <span className="ml-2 text-muted-foreground">{formatPaymentReference(p)}</span>
+                          </div>
+                          {isAdmin && (
+                            <div className="flex gap-1">
+                              <Button size="icon-sm" variant="ghost" onClick={() => onEditPayment(p)}>
+                                <Pencil className="size-3.5" />
+                              </Button>
+                              <Button
+                                size="icon-sm"
+                                variant="ghost"
+                                className="text-destructive hover:text-destructive"
+                                onClick={() => setDeletePaymentTarget(p)}
+                              >
+                                <Trash2 className="size-3.5" />
+                              </Button>
+                            </div>
+                          )}
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
               </div>
             ))}
           </div>
@@ -169,7 +235,7 @@ export default function FranchiseDeliveries({
 
         <div>
           <h4 className="mb-3 text-sm font-medium text-muted-foreground uppercase tracking-wide">
-            Payments received
+            All payments
           </h4>
           {payments.length === 0 ? (
             <p className="text-sm text-muted-foreground">No payments received yet.</p>
@@ -180,6 +246,7 @@ export default function FranchiseDeliveries({
                   <TableHeader>
                     <TableRow>
                       <TableHead>Date</TableHead>
+                      <TableHead>Against</TableHead>
                       <TableHead>Method</TableHead>
                       <TableHead>Reference</TableHead>
                       <TableHead className="text-right">Amount</TableHead>
@@ -191,6 +258,9 @@ export default function FranchiseDeliveries({
                     {payments.map((p) => (
                       <TableRow key={p.id}>
                         <TableCell>{fmtDate(p.date)}</TableCell>
+                        <TableCell className="max-w-[180px] truncate text-muted-foreground" title={paymentForLabel(p)}>
+                          {paymentForLabel(p)}
+                        </TableCell>
                         <TableCell>{p.method}</TableCell>
                         <TableCell className="text-muted-foreground">
                           {formatPaymentReference(p)}
@@ -200,12 +270,7 @@ export default function FranchiseDeliveries({
                         {isAdmin && (
                           <TableCell>
                             <div className="flex justify-end gap-1">
-                              <Button
-                                size="icon-sm"
-                                variant="ghost"
-                                onClick={() => onEditPayment(p)}
-                                title="Edit payment"
-                              >
+                              <Button size="icon-sm" variant="ghost" onClick={() => onEditPayment(p)}>
                                 <Pencil className="size-3.5" />
                               </Button>
                               <Button
@@ -213,7 +278,6 @@ export default function FranchiseDeliveries({
                                 variant="ghost"
                                 className="text-destructive hover:text-destructive"
                                 onClick={() => setDeletePaymentTarget(p)}
-                                title="Delete payment"
                               >
                                 <Trash2 className="size-3.5" />
                               </Button>
@@ -226,19 +290,18 @@ export default function FranchiseDeliveries({
                 </Table>
               </div>
 
-              <div className="mobile-card-list md:hidden">
+              <div className="flex flex-col gap-3 md:hidden">
                 {payments.map((p) => (
-                  <article key={p.id} className="mobile-card mobile-card--flat">
-                    <div className="mobile-card-head">
-                      <div>
-                        <div className="cell-title">{fmtMoney(p.amount)}</div>
-                        <div className="cell-sub">{fmtDate(p.date)} · {p.method}</div>
-                      </div>
+                  <article key={p.id} className="rounded-xl border bg-card p-4 shadow-sm">
+                    <div className="mb-2">
+                      <div className="cell-title font-mono">{fmtMoney(p.amount)}</div>
+                      <div className="cell-sub mt-1">{fmtDate(p.date)} · {p.method}</div>
+                      <div className="cell-sub mt-1">{paymentForLabel(p)}</div>
                     </div>
-                    <p className="mobile-card-detail">{formatPaymentReference(p)}</p>
-                    <p className="mobile-card-detail cell-sub">Recorded by {p.createdBy}</p>
+                    <p className="text-sm text-muted-foreground">{formatPaymentReference(p)}</p>
+                    <p className="mt-1 text-xs text-muted-foreground">Recorded by {p.createdBy}</p>
                     {isAdmin && (
-                      <div className="mobile-card-foot">
+                      <div className="mt-3 flex gap-2 border-t border-border pt-3">
                         <Button size="sm" variant="ghost" onClick={() => onEditPayment(p)}>
                           <Pencil className="size-3.5" /> Edit
                         </Button>

@@ -1,4 +1,5 @@
 import { addDays, todayStr, daysBetween } from "../utils/date";
+import { computeOrderStatus } from "./orderStatus";
 
 function statusFromDueAndDates(due, orderDate, settings, termDaysOverride) {
   const termDays = termDaysOverride ?? settings.termDays;
@@ -70,4 +71,28 @@ export function enrichOrders(orders, settings) {
     ...o,
     dueDate: addDays(o.date, o.termDays ?? settings.termDays),
   }));
+}
+
+/** Attach per-delivery payments, paid amount, balance due, and status. */
+export function enrichOrdersWithPayments(orders, payments, settings) {
+  return enrichOrders(orders, settings).map((order) => {
+    const orderPayments = payments
+      .filter((p) => p.orderId === order.id)
+      .sort((a, b) => (a.date < b.date ? 1 : -1));
+    const { totalPaid, due, status, daysOverdue } = computeOrderStatus(order, orderPayments, settings);
+    return {
+      ...order,
+      payments: orderPayments,
+      totalPaid,
+      due,
+      status,
+      daysOverdue,
+    };
+  });
+}
+
+export function orderLabel(order) {
+  if (!order) return "Account payment";
+  const name = order.materials?.trim() || "Materials dispatch";
+  return `${name} (${order.date})`;
 }

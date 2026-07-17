@@ -8,7 +8,7 @@ const router = Router();
 
 router.post("/", auth, async (req, res) => {
   try {
-    const { franchiseId, amount, date, method, reference } = req.body;
+    const { franchiseId, orderId, amount, date, method, reference } = req.body;
 
     if (!franchiseId) return res.status(400).json({ error: "Franchise is required." });
 
@@ -18,12 +18,30 @@ router.post("/", auth, async (req, res) => {
     const franchise = await prisma.franchise.findUnique({ where: { id: franchiseId } });
     if (!franchise) return res.status(404).json({ error: "Franchise not found." });
 
+    let order = null;
+    if (orderId) {
+      order = await prisma.order.findFirst({ where: { id: orderId, franchiseId } });
+      if (!order) return res.status(404).json({ error: "Delivery not found for this franchise." });
+
+      const paidOnOrder = await prisma.payment.aggregate({
+        where: { orderId },
+        _sum: { amount: true },
+      });
+      const orderDue = Math.max(Number(order.amount) - (paidOnOrder._sum.amount || 0), 0);
+      if (Number(amount) > orderDue + 0.01) {
+        return res.status(400).json({
+          error: `Payment exceeds this delivery's balance due (₹${orderDue.toLocaleString("en-IN")}).`,
+        });
+      }
+    }
+
     const ref = (reference || "").trim();
     const notes = buildPaymentNotes(method, ref);
 
     const payment = await prisma.payment.create({
       data: {
         franchiseId,
+        orderId: orderId || null,
         amount: Number(amount),
         date: date || new Date().toISOString().slice(0, 10),
         method,
@@ -33,10 +51,14 @@ router.post("/", auth, async (req, res) => {
       },
     });
 
+    const deliveryNote = order
+      ? ` for delivery on ${order.date} (₹${Number(order.amount).toLocaleString("en-IN")})`
+      : "";
+
     await logActivity(
       req.user,
       "add_payment",
-      `Logged ${method} payment of ₹${Number(amount).toLocaleString("en-IN")} from "${franchise.name}" — ${notes}`
+      `Logged ${method} payment of ₹${Number(amount).toLocaleString("en-IN")} from "${franchise.name}"${deliveryNote} — ${notes}`
     );
     res.status(201).json(payment);
   } catch (err) {
@@ -57,6 +79,25 @@ router.patch("/:id", auth, requireAdmin, async (req, res) => {
       include: { franchise: true },
     });
     if (!existing) return res.status(404).json({ error: "Payment not found." });
+
+    if (existing.orderId) {
+      const order = await prisma.order.findFirst({
+        where: { id: existing.orderId, franchiseId: existing.franchiseId },
+      });
+      if (!order) return res.status(404).json({ error: "Linked delivery not found." });
+
+      const paidOnOrder = await prisma.payment.aggregate({
+        where: { orderId: existing.orderId },
+        _sum: { amount: true },
+      });
+      const otherPaid = (paidOnOrder._sum.amount || 0) - Number(existing.amount);
+      const orderDue = Math.max(Number(order.amount) - otherPaid, 0);
+      if (Number(amount) > orderDue + 0.01) {
+        return res.status(400).json({
+          error: `Payment exceeds this delivery's balance due (₹${orderDue.toLocaleString("en-IN")}).`,
+        });
+      }
+    }
 
     const ref = (reference || "").trim();
     const notes = buildPaymentNotes(method, ref);

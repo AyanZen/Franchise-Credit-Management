@@ -107,9 +107,9 @@ export default function FranchiseDashboard({
             variant="secondary"
             onClick={() => onAddPayment()}
             disabled={franchise.totalDue <= 0}
-            title={franchise.totalDue <= 0 ? "No outstanding balance" : "Record payment received"}
+            title={franchise.totalDue <= 0 ? "No outstanding balance" : "Record payment against account balance"}
           >
-            <IndianRupee /> Record payment
+            <IndianRupee /> Account payment
           </Button>
         </div>
       </div>

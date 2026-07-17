@@ -34,7 +34,10 @@ export default function PortalApp() {
     showAddOrderFor,
     setShowAddOrderFor,
     showAddPaymentFor,
-    setShowAddPaymentFor,
+    paymentForOrderId,
+    openPaymentForm,
+    closePaymentForm,
+    ordersByFranchise,
     editOrder,
     setEditOrder,
     editPayment,
@@ -44,7 +47,6 @@ export default function PortalApp() {
     search,
     setSearch,
     toast,
-    ordersByFranchise,
     paymentsByFranchise,
     franchiseSummaries,
     alertFranchises,
@@ -108,6 +110,12 @@ export default function PortalApp() {
   const paymentFranchise = showAddPaymentFor || editPayment
     ? franchiseSummaries.find((f) => f.id === (showAddPaymentFor || editPayment?.franchiseId))
     : null;
+  const paymentOrder = showAddPaymentFor && paymentForOrderId
+    ? (ordersByFranchise[showAddPaymentFor] || []).find((o) => o.id === paymentForOrderId)
+    : null;
+  const editPaymentOrder = editPayment?.orderId
+    ? (ordersByFranchise[editPayment.franchiseId] || []).find((o) => o.id === editPayment.orderId)
+    : null;
 
   return (
     <div className="fp-app">
@@ -168,7 +176,7 @@ export default function PortalApp() {
                 onEdit={() => setEditFranchise(selectedFranchise)}
                 onDelete={deleteFranchise}
                 onAddOrder={() => setShowAddOrderFor(selectedFranchise.id)}
-                onAddPayment={() => setShowAddPaymentFor(selectedFranchise.id)}
+                onAddPayment={(orderId) => openPaymentForm(selectedFranchise.id, orderId ?? null)}
                 onEditOrder={(order) => setEditOrder(order)}
                 onDeleteOrder={deleteOrder}
                 onEditPayment={(payment) => setEditPayment(payment)}
@@ -240,13 +248,15 @@ export default function PortalApp() {
       {showAddPaymentFor && paymentFranchise && (
         <PaymentForm
           franchise={paymentFranchise}
-          onClose={() => setShowAddPaymentFor(null)}
+          order={paymentOrder}
+          onClose={closePaymentForm}
           onSubmit={(data) => addPayment(showAddPaymentFor, data)}
         />
       )}
       {editPayment && paymentFranchise && (
         <PaymentForm
           franchise={paymentFranchise}
+          order={editPaymentOrder}
           initial={editPayment}
           onClose={() => setEditPayment(null)}
           onSubmit={(data) => updatePayment(editPayment.id, data)}
