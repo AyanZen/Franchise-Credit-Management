@@ -142,7 +142,7 @@ export default function FranchiseDashboard({
             <CardDescription className="flex items-center gap-1.5">
               <IndianRupee className="size-3.5" /> Outstanding
             </CardDescription>
-            <CardTitle className={`font-mono text-2xl ${franchise.totalDue > 0 ? "text-amber-600" : ""}`}>
+            <CardTitle className={`font-mono text-2xl ${franchise.totalDue > 0 ? "text-[var(--gold)]" : ""}`}>
               {fmtMoney(franchise.totalDue)}
             </CardTitle>
           </CardHeader>
@@ -241,11 +241,11 @@ export default function FranchiseDashboard({
                     Account is within payment terms.
                   </p>
                 ) : (
-                  <div className="rounded-lg border border-amber-200 bg-amber-50 p-4">
-                    <p className="text-sm font-medium text-amber-900">
+                  <div className="rounded-2xl border border-[rgba(232,200,88,0.3)] bg-[rgba(232,200,88,0.1)] p-4">
+                    <p className="text-sm font-medium text-[var(--gold)]">
                       {fmtMoney(franchise.totalDue)} outstanding
                     </p>
-                    <p className="mt-1 text-xs text-amber-800">
+                    <p className="mt-1 text-xs text-[rgba(248,244,225,0.7)]">
                       {franchise.daysOverdue} days past due
                     </p>
                     <StatusBadge status={franchise.status} />

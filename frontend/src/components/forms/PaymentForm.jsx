@@ -108,7 +108,7 @@ export default function PaymentForm({ franchise, order, initial, onClose, onSubm
           {paymentAmount > 0 && (
             <div className="mt-1 flex justify-between border-t border-border/60 pt-1">
               <span className="text-muted-foreground">Balance after payment</span>
-              <span className={`font-mono font-medium ${balanceAfter === 0 ? "text-emerald-600" : ""}`}>
+              <span className={`font-mono font-medium ${balanceAfter === 0 ? "text-[var(--ok)]" : ""}`}>
                 {fmtMoney(balanceAfter)}
               </span>
             </div>
@@ -186,12 +186,12 @@ export default function PaymentForm({ franchise, order, initial, onClose, onSubm
         </div>
 
         {isOverpay && !order && (
-          <p className="text-sm text-amber-600">
+          <p className="text-sm text-[var(--gold)]">
             Payment exceeds the outstanding balance. Extra amount will be recorded as credit.
           </p>
         )}
         {isOverpay && order && (
-          <p className="text-sm text-amber-600">
+          <p className="text-sm text-[var(--gold)]">
             Amount exceeds this delivery&apos;s balance due.
           </p>
         )}

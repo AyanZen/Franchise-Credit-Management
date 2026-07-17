@@ -1,8 +1,9 @@
 import { LogIn } from "lucide-react";
 import { useState } from "react";
 import { isServerWakeUpError } from "@/lib/apiErrors";
+import ThemeToggle from "../layout/ThemeToggle";
 
-export default function LoginScreen({ onLogin }) {
+export default function LoginScreen({ onLogin, theme, onToggleTheme }) {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [err, setErr] = useState("");
@@ -19,6 +20,9 @@ export default function LoginScreen({ onLogin }) {
 
   return (
     <div className="login-wrap">
+      <div className="login-theme-slot">
+        <ThemeToggle theme={theme} onToggle={onToggleTheme} compact />
+      </div>
       <div className="login-hero">
         <h1>Track every franchise,<br />every payment.</h1>
         <p>Material dispatch, payment terms, and overdue alerts — all in one simple ledger.</p>

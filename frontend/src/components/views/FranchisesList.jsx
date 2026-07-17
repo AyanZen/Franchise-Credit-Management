@@ -134,7 +134,7 @@ export default function FranchisesList({
               </div>
               <div className="flex items-center justify-between rounded-xl bg-muted/50 px-4 py-3">
                 <span className="text-xs font-semibold tracking-wide text-muted-foreground uppercase">Paid</span>
-                <span className="font-mono text-sm font-medium text-emerald-600">{fmtMoney(f.totalPaid)}</span>
+                <span className="font-mono text-sm font-medium text-[var(--ok)]">{fmtMoney(f.totalPaid)}</span>
               </div>
               <div className="flex items-center justify-between rounded-xl bg-muted/50 px-4 py-3">
                 <span className="text-xs font-semibold tracking-wide text-muted-foreground uppercase">Due</span>

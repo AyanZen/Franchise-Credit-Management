@@ -1,6 +1,7 @@
 import {
   Package, Users, Bell, ClipboardList, Settings as SettingsIcon, LogOut, TrendingUp, X,
 } from "lucide-react";
+import ThemeToggle from "./ThemeToggle";
 
 export default function Sidebar({
   view,
@@ -10,6 +11,8 @@ export default function Sidebar({
   alertCount,
   mobileOpen,
   onClose,
+  theme,
+  onToggleTheme,
 }) {
   const items = [
     { key: "dashboard", label: "Dashboard", icon: TrendingUp },
@@ -19,8 +22,8 @@ export default function Sidebar({
   ];
   if (currentUser.role === "admin") {
     items.push({ key: "users", label: "Employees", icon: Users });
+    items.push({ key: "settings", label: "Settings", icon: SettingsIcon });
   }
-  items.push({ key: "settings", label: "Settings", icon: SettingsIcon });
 
   function navigate(key) {
     setView(key);
@@ -56,9 +59,17 @@ export default function Sidebar({
           </button>
         ))}
       </nav>
-      <div className="side-user">
-        <div className="side-user-name">{currentUser.name}</div>
+      <div className={`side-user${view === "profile" ? " side-user--active" : ""}`}>
+        <button
+          type="button"
+          className="side-user-name side-user-name-btn"
+          onClick={() => navigate("profile")}
+          title="View profile"
+        >
+          {currentUser.name}
+        </button>
         <div className="side-user-role">{currentUser.role}</div>
+        <ThemeToggle theme={theme} onToggle={onToggleTheme} />
         <button
           className="btn btn-ghost btn-block"
           onClick={() => {

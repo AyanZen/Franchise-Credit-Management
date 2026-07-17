@@ -110,18 +110,18 @@ export default function FranchiseDeliveries({
           </div>
           <div>
             <p className="text-xs text-muted-foreground">Total paid</p>
-            <p className="font-mono text-lg font-medium text-emerald-600">{fmtMoney(franchise.totalPaid)}</p>
+            <p className="font-mono text-lg font-medium text-[var(--ok)]">{fmtMoney(franchise.totalPaid)}</p>
           </div>
           <div>
             <p className="text-xs text-muted-foreground">Balance due</p>
-            <p className={`font-mono text-lg font-semibold ${franchise.totalDue > 0 ? "text-amber-600" : ""}`}>
+            <p className={`font-mono text-lg font-semibold ${franchise.totalDue > 0 ? "text-[var(--gold)]" : ""}`}>
               {fmtMoney(franchise.totalDue)}
             </p>
           </div>
         </div>
 
         {isOverdue && (
-          <div className="flex flex-wrap items-center gap-2 rounded-md border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-800">
+          <div className="flex flex-wrap items-center gap-2 rounded-2xl border border-[rgba(232,200,88,0.3)] bg-[rgba(232,200,88,0.1)] px-3 py-2 text-sm text-[var(--gold)]">
             <AlertTriangle className="size-4" />
             <span>{franchise.daysOverdue}d past due · {fmtMoney(franchise.totalDue)} outstanding</span>
             {last && (
@@ -156,8 +156,8 @@ export default function FranchiseDeliveries({
                     </p>
                     <div className="flex flex-wrap gap-4 text-sm">
                       <span>Amount <strong className="font-mono">{fmtMoney(o.amount)}</strong></span>
-                      <span className="text-emerald-600">Paid <strong className="font-mono">{fmtMoney(o.totalPaid ?? 0)}</strong></span>
-                      <span className={o.due > 0 ? "text-amber-600" : ""}>
+                      <span className="text-[var(--ok)]">Paid <strong className="font-mono">{fmtMoney(o.totalPaid ?? 0)}</strong></span>
+                      <span className={o.due > 0 ? "text-[var(--gold)]" : ""}>
                         Due <strong className="font-mono">{fmtMoney(o.due ?? 0)}</strong>
                       </span>
                     </div>

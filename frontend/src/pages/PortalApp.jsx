@@ -14,8 +14,10 @@ import Dashboard from "../components/views/Dashboard";
 import FranchiseDashboard from "../components/franchise/FranchiseDashboard";
 import FranchisesList from "../components/views/FranchisesList";
 import SettingsView from "../components/views/SettingsView";
+import ProfileView from "../components/views/ProfileView";
 import UsersView from "../components/views/UsersView";
 import { usePortalData } from "../hooks/usePortalData";
+import { useTheme } from "../hooks/useTheme";
 
 export default function PortalApp() {
   const {
@@ -74,6 +76,7 @@ export default function PortalApp() {
 
   const isAdmin = currentUser?.role === "admin";
   const [menuOpen, setMenuOpen] = useState(false);
+  const { theme, toggleTheme } = useTheme();
 
   useEffect(() => {
     if (!menuOpen) return;
@@ -101,7 +104,7 @@ export default function PortalApp() {
     return (
       <div className="fp-app">
         <MotionBackground />
-        <LoginScreen onLogin={handleLogin} />
+        <LoginScreen onLogin={handleLogin} theme={theme} onToggleTheme={toggleTheme} />
       </div>
     );
   }
@@ -130,7 +133,12 @@ export default function PortalApp() {
               aria-label="Close menu"
             />
           )}
-          <MobileHeader menuOpen={menuOpen} onToggle={() => setMenuOpen((o) => !o)} />
+          <MobileHeader
+            menuOpen={menuOpen}
+            onToggle={() => setMenuOpen((o) => !o)}
+            theme={theme}
+            onToggleTheme={toggleTheme}
+          />
           <Sidebar
             view={view}
             setView={(v) => { setView(v); setSelectedFranchiseId(null); }}
@@ -139,6 +147,8 @@ export default function PortalApp() {
             alertCount={totals.criticalCount + totals.overdueCount}
             mobileOpen={menuOpen}
             onClose={() => setMenuOpen(false)}
+            theme={theme}
+            onToggleTheme={toggleTheme}
           />
           <main className="main view-fade" key={view}>
             {toast && <div className="toast">{toast}</div>}
@@ -207,13 +217,17 @@ export default function PortalApp() {
               />
             )}
 
-            {view === "settings" && (
+            {view === "profile" && (
+              <ProfileView
+                currentUser={currentUser}
+                onChangePassword={changePassword}
+              />
+            )}
+
+            {view === "settings" && isAdmin && (
               <SettingsView
                 settings={settings}
-                isAdmin={isAdmin}
-                currentUser={currentUser}
                 onSave={saveSettings}
-                onChangePassword={changePassword}
               />
             )}
           </main>
