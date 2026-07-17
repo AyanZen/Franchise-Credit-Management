@@ -3,12 +3,39 @@ import prisma from "../lib/prisma.js";
 import { auth, requireAdmin } from "../middleware/auth.js";
 import { logActivity } from "../utils/helpers.js";
 import { buildPaymentNotes, validatePaymentInput } from "../utils/payment.js";
+import { safeErrorMessage } from "../utils/errors.js";
+import { normalizeBillNo } from "../utils/billNo.js";
 
 const router = Router();
 
+async function resolveOrderForPayment({ franchiseId, orderId, billNo }) {
+  if (billNo) {
+    const order = await prisma.order.findFirst({
+      where: { franchiseId, billNo: normalizeBillNo(billNo) },
+    });
+    if (!order) {
+      return {
+        error: `Bill number "${normalizeBillNo(billNo)}" was not found for this franchise. Check for typos.`,
+      };
+    }
+    if (orderId && order.id !== orderId) {
+      return { error: "Bill number does not match the selected delivery." };
+    }
+    return { order };
+  }
+
+  if (orderId) {
+    const order = await prisma.order.findFirst({ where: { id: orderId, franchiseId } });
+    if (!order) return { error: "Delivery not found for this franchise." };
+    return { order };
+  }
+
+  return { order: null };
+}
+
 router.post("/", auth, async (req, res) => {
   try {
-    const { franchiseId, orderId, amount, date, method, reference } = req.body;
+    const { franchiseId, orderId, billNo, amount, date, method, reference } = req.body;
 
     if (!franchiseId) return res.status(400).json({ error: "Franchise is required." });
 
@@ -18,13 +45,19 @@ router.post("/", auth, async (req, res) => {
     const franchise = await prisma.franchise.findUnique({ where: { id: franchiseId } });
     if (!franchise) return res.status(404).json({ error: "Franchise not found." });
 
-    let order = null;
-    if (orderId) {
-      order = await prisma.order.findFirst({ where: { id: orderId, franchiseId } });
-      if (!order) return res.status(404).json({ error: "Delivery not found for this franchise." });
+    const requiresBill = Boolean(billNo || orderId);
+    if (requiresBill && !billNo && !orderId) {
+      return res.status(400).json({ error: "Bill number is required to link this payment to a delivery." });
+    }
 
+    const resolved = await resolveOrderForPayment({ franchiseId, orderId, billNo });
+    if (resolved.error) return res.status(404).json({ error: resolved.error });
+
+    const order = resolved.order;
+
+    if (order) {
       const paidOnOrder = await prisma.payment.aggregate({
-        where: { orderId },
+        where: { orderId: order.id },
         _sum: { amount: true },
       });
       const orderDue = Math.max(Number(order.amount) - (paidOnOrder._sum.amount || 0), 0);
@@ -41,7 +74,7 @@ router.post("/", auth, async (req, res) => {
     const payment = await prisma.payment.create({
       data: {
         franchiseId,
-        orderId: orderId || null,
+        orderId: order?.id || null,
         amount: Number(amount),
         date: date || new Date().toISOString().slice(0, 10),
         method,
@@ -52,7 +85,7 @@ router.post("/", auth, async (req, res) => {
     });
 
     const deliveryNote = order
-      ? ` for delivery on ${order.date} (₹${Number(order.amount).toLocaleString("en-IN")})`
+      ? ` for bill ${order.billNo} (₹${Number(order.amount).toLocaleString("en-IN")})`
       : "";
 
     await logActivity(
@@ -63,7 +96,7 @@ router.post("/", auth, async (req, res) => {
     res.status(201).json(payment);
   } catch (err) {
     console.error("[payments] create failed:", err);
-    res.status(500).json({ error: err.message || "Internal server error" });
+    res.status(500).json({ error: safeErrorMessage(err) });
   }
 });
 
@@ -121,7 +154,7 @@ router.patch("/:id", auth, requireAdmin, async (req, res) => {
     res.json(payment);
   } catch (err) {
     console.error("[payments] update failed:", err);
-    res.status(500).json({ error: err.message || "Internal server error" });
+    res.status(500).json({ error: safeErrorMessage(err) });
   }
 });
 
@@ -142,7 +175,7 @@ router.delete("/:id", auth, requireAdmin, async (req, res) => {
     res.json({ ok: true });
   } catch (err) {
     console.error("[payments] delete failed:", err);
-    res.status(500).json({ error: err.message || "Internal server error" });
+    res.status(500).json({ error: safeErrorMessage(err) });
   }
 });
 

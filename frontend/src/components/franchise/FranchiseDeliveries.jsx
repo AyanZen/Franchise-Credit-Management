@@ -148,6 +148,11 @@ export default function FranchiseDeliveries({
                 <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
                   <div className="min-w-0 flex-1 space-y-2">
                     <div className="flex flex-wrap items-center gap-2">
+                      {o.billNo && (
+                        <span className="rounded-full border border-[rgba(232,200,88,0.3)] bg-[rgba(232,200,88,0.1)] px-2.5 py-0.5 font-mono text-xs font-semibold text-[var(--gold)]">
+                          {o.billNo}
+                        </span>
+                      )}
                       <p className="font-medium">{o.materials || "Materials dispatch"}</p>
                       <StatusBadge status={o.status} />
                     </div>

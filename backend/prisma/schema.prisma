@@ -8,17 +8,20 @@ datasource db {
 }
 
 model User {
-  id        String   @id @default(cuid())
-  username  String   @unique
-  password  String
-  name      String
-  role      String
-  createdAt DateTime @default(now())
+  id           String   @id @default(cuid())
+  username     String   @unique
+  password     String
+  name         String
+  role         String
+  tokenVersion Int      @default(0)
+  createdAt    DateTime @default(now())
 }
 
 model Franchise {
   id                  String    @id @default(cuid())
   name                String
+  billPrefix          String    @default("")
+  nextBillSeq         Int       @default(1)
   contact             String    @default("")
   phone               String    @default("")
   email               String    @default("")
@@ -28,12 +31,15 @@ model Franchise {
   lastEmailReminderAt DateTime?
   orders              Order[]
   payments            Payment[]
+
+  @@unique([billPrefix])
 }
 
 model Order {
   id          String     @id @default(cuid())
   franchiseId String
   franchise   Franchise  @relation(fields: [franchiseId], references: [id], onDelete: Cascade)
+  billNo      String     @default("")
   materials   String     @default("")
   amount      Float
   date        String
@@ -43,6 +49,8 @@ model Order {
   createdBy   String
   payments    Payment[]
   reminders   Reminder[]
+
+  @@unique([franchiseId, billNo])
 }
 
 model Payment {

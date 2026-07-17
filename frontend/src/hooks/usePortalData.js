@@ -71,9 +71,9 @@ export function usePortalData() {
     })();
   }, []);
 
-  function showToast(msg) {
-    setToast(msg);
-    setTimeout(() => setToast(null), 2600);
+  function showToast(message, variant = "success") {
+    setToast({ message, variant });
+    setTimeout(() => setToast(null), variant === "error" ? 4200 : 2600);
   }
 
   const paymentsByFranchise = useMemo(() => {
@@ -192,10 +192,15 @@ export function usePortalData() {
   }
 
   async function addOrder(franchiseId, data) {
-    await ordersApi.create({ franchiseId, ...data });
-    await refreshData();
-    setShowAddOrderFor(null);
-    showToast("Delivery recorded");
+    try {
+      await ordersApi.create({ franchiseId, ...data });
+      await refreshData();
+      setShowAddOrderFor(null);
+      showToast("Delivery recorded");
+    } catch (e) {
+      showToast(e.message, "error");
+      throw e;
+    }
   }
 
   function openPaymentForm(franchiseId, orderId = null) {
@@ -212,11 +217,15 @@ export function usePortalData() {
     await paymentsApi.create({
       franchiseId,
       orderId: paymentForOrderId || undefined,
-      ...data,
+      billNo: data.billNo || undefined,
+      amount: data.amount,
+      date: data.date,
+      method: data.method,
+      reference: data.reference,
     });
     await refreshData();
     closePaymentForm();
-    showToast(paymentForOrderId ? "Delivery payment logged" : "Payment logged");
+    showToast(paymentForOrderId || data.billNo ? "Delivery payment logged" : "Payment logged");
   }
 
   async function updateOrder(id, data) {
@@ -295,7 +304,12 @@ export function usePortalData() {
 
   async function changePassword(currentPassword, newPassword) {
     try {
-      await authApi.changePassword(currentPassword, newPassword);
+      const res = await authApi.changePassword(currentPassword, newPassword);
+      if (res.token) {
+        setToken(res.token);
+        localStorage.setItem("user", JSON.stringify(res.user));
+        setCurrentUser(res.user);
+      }
       showToast("Password updated");
       return null;
     } catch (e) {
@@ -332,6 +346,7 @@ export function usePortalData() {
     search,
     setSearch,
     toast,
+    showToast,
     ordersByFranchise,
     paymentsByFranchise,
     franchiseSummaries,

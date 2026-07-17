@@ -4,6 +4,8 @@ import prisma from "../lib/prisma.js";
 import { auth, requireAdmin, sanitizeUser } from "../middleware/auth.js";
 import { logActivity } from "../utils/helpers.js";
 import { validatePassword } from "../utils/password.js";
+import { sanitizeRole, sanitizeUsername, trimString } from "../utils/sanitize.js";
+import { BCRYPT_ROUNDS } from "../config/security.js";
 
 const router = Router();
 
@@ -13,24 +15,27 @@ router.get("/", auth, requireAdmin, async (req, res) => {
 });
 
 router.post("/", auth, requireAdmin, async (req, res) => {
-  const { name, username, password, role } = req.body;
-  if (!name?.trim() || !username?.trim() || !password) {
+  const name = trimString(req.body?.name, 120);
+  const username = sanitizeUsername(req.body?.username);
+  const password = typeof req.body?.password === "string" ? req.body.password : "";
+
+  if (!name || !username || !password) {
     return res.status(400).json({ error: "All fields are required." });
   }
 
   const passwordError = validatePassword(password);
   if (passwordError) return res.status(400).json({ error: passwordError });
 
-  const roleValue = role === "admin" ? "admin" : "staff";
+  const roleValue = sanitizeRole(req.body?.role);
 
-  const existing = await prisma.user.findUnique({ where: { username: username.trim() } });
+  const existing = await prisma.user.findUnique({ where: { username } });
   if (existing) return res.status(409).json({ error: "Username already exists" });
 
-  const hashed = await bcrypt.hash(password, 10);
+  const hashed = await bcrypt.hash(password, BCRYPT_ROUNDS);
   const user = await prisma.user.create({
     data: {
-      name: name.trim(),
-      username: username.trim(),
+      name,
+      username,
       password: hashed,
       role: roleValue,
     },

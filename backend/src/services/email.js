@@ -1,4 +1,5 @@
 import nodemailer from "nodemailer";
+import { escapeHtml } from "../utils/sanitize.js";
 
 function smtpConfigured() {
   return Boolean(process.env.SMTP_HOST && process.env.SMTP_FROM);
@@ -23,15 +24,20 @@ export function formatInr(amount) {
 }
 
 export function buildReminderEmail({ franchiseName, totalDue, totalTaken, totalPaid }) {
-  const subject = `Payment reminder — ${formatInr(totalDue)} outstanding`;
+  const safeName = escapeHtml(franchiseName);
+  const due = formatInr(totalDue);
+  const taken = formatInr(totalTaken);
+  const paid = formatInr(totalPaid);
+
+  const subject = `Payment reminder — ${due} outstanding`;
   const text = [
     `Dear ${franchiseName},`,
     "",
-    `This is an automated reminder from Dispatch Ledger.`,
+    "This is an automated reminder from Dispatch Ledger.",
     "",
-    `Your current outstanding balance is ${formatInr(totalDue)}.`,
-    `Total dispatched: ${formatInr(totalTaken)}`,
-    `Total paid: ${formatInr(totalPaid)}`,
+    `Your current outstanding balance is ${due}.`,
+    `Total dispatched: ${taken}`,
+    `Total paid: ${paid}`,
     "",
     "Please arrange payment at your earliest convenience.",
     "",
@@ -39,13 +45,13 @@ export function buildReminderEmail({ franchiseName, totalDue, totalTaken, totalP
   ].join("\n");
 
   const html = `
-    <p>Dear <strong>${franchiseName}</strong>,</p>
+    <p>Dear <strong>${safeName}</strong>,</p>
     <p>This is an automated reminder from <strong>Dispatch Ledger</strong>.</p>
-    <p>Your current <strong>outstanding balance is ${formatInr(totalDue)}</strong>.</p>
+    <p>Your current <strong>outstanding balance is ${due}</strong>.</p>
     <table cellpadding="6" style="border-collapse:collapse;margin:12px 0">
-      <tr><td>Total dispatched</td><td><strong>${formatInr(totalTaken)}</strong></td></tr>
-      <tr><td>Total paid</td><td><strong>${formatInr(totalPaid)}</strong></td></tr>
-      <tr><td>Outstanding</td><td><strong style="color:#b45309">${formatInr(totalDue)}</strong></td></tr>
+      <tr><td>Total dispatched</td><td><strong>${taken}</strong></td></tr>
+      <tr><td>Total paid</td><td><strong>${paid}</strong></td></tr>
+      <tr><td>Outstanding</td><td><strong style="color:#b45309">${due}</strong></td></tr>
     </table>
     <p>Please arrange payment at your earliest convenience.</p>
     <p>Thank you.</p>

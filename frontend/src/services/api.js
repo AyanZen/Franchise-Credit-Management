@@ -31,6 +31,10 @@ export async function api(path, options = {}) {
 
   const data = await res.json().catch(() => ({}));
   if (!res.ok) {
+    if (res.status === 401) {
+      setToken(null);
+      localStorage.removeItem("user");
+    }
     if ([502, 503, 504].includes(res.status)) {
       throw new Error(SERVER_WAKE_UP_MESSAGE);
     }
@@ -57,6 +61,10 @@ export const ordersApi = {
   create: (data) => api("/orders", { method: "POST", body: data }),
   update: (id, data) => api(`/orders/${id}`, { method: "PATCH", body: data }),
   remove: (id) => api(`/orders/${id}`, { method: "DELETE" }),
+  lookup: (franchiseId, billNo) =>
+    api(`/orders/lookup?franchiseId=${encodeURIComponent(franchiseId)}&billNo=${encodeURIComponent(billNo)}`),
+  check: (franchiseId, billNo) =>
+    api(`/orders/check?franchiseId=${encodeURIComponent(franchiseId)}&billNo=${encodeURIComponent(billNo)}`),
 };
 
 export const paymentsApi = {

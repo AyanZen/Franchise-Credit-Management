@@ -49,6 +49,7 @@ export default function PortalApp() {
     search,
     setSearch,
     toast,
+    showToast,
     paymentsByFranchise,
     franchiseSummaries,
     alertFranchises,
@@ -151,7 +152,11 @@ export default function PortalApp() {
             onToggleTheme={toggleTheme}
           />
           <main className="main view-fade" key={view}>
-            {toast && <div className="toast">{toast}</div>}
+            {toast && (
+              <div className={`toast toast--${toast.variant || "success"}${toast.variant === "error" ? " toast--center" : ""}`}>
+                {toast.message ?? toast}
+              </div>
+            )}
 
             {view === "dashboard" && (
               <Dashboard
@@ -247,8 +252,10 @@ export default function PortalApp() {
       {showAddOrderFor && (
         <OrderForm
           settings={settings}
+          franchise={franchiseSummaries.find((f) => f.id === showAddOrderFor)}
           onClose={() => setShowAddOrderFor(null)}
           onSubmit={(data) => addOrder(showAddOrderFor, data)}
+          onError={(msg) => showToast(msg, "error")}
         />
       )}
       {editOrder && (
@@ -263,8 +270,10 @@ export default function PortalApp() {
         <PaymentForm
           franchise={paymentFranchise}
           order={paymentOrder}
+          accountOnly={!paymentForOrderId}
           onClose={closePaymentForm}
           onSubmit={(data) => addPayment(showAddPaymentFor, data)}
+          onError={(msg) => showToast(msg, "error")}
         />
       )}
       {editPayment && paymentFranchise && (

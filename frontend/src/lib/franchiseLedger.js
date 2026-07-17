@@ -93,6 +93,7 @@ export function enrichOrdersWithPayments(orders, payments, settings) {
 
 export function orderLabel(order) {
   if (!order) return "Account payment";
+  const bill = order.billNo ? `${order.billNo} · ` : "";
   const name = order.materials?.trim() || "Materials dispatch";
-  return `${name} (${order.date})`;
+  return `${bill}${name} (${order.date})`;
 }
