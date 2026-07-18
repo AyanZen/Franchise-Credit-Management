@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState } from "react";
 
 const STORAGE_KEY = "dl-theme";
-const DEFAULT_THEME = "dark";
+const DEFAULT_THEME = "light";
 
 export function getStoredTheme() {
   if (typeof window === "undefined") return DEFAULT_THEME;
