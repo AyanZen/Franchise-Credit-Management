@@ -1,93 +1,29 @@
-import { fmtDate, fmtMoney } from "../../utils/format";
-import EmptyState from "../common/EmptyState";
+import { fmtMoney } from "../../utils/format";
 import PageHeader from "../common/PageHeader";
-import Stamp from "../common/Stamp";
 import StatCard from "../common/StatCard";
+import DashboardBusinessChart from "./DashboardBusinessChart";
+import DashboardPeriodReport from "./DashboardPeriodReport";
 
-export default function Dashboard({ totals, alertFranchises, activityLog, onOpenFranchise, onGoAlerts }) {
+export default function Dashboard({ totals, orders, payments, franchises, onOpenCritical }) {
   return (
     <div>
       <PageHeader title="Dashboard" subtitle="Where every franchise stands, right now." />
-      <div className="card-grid">
+      <div className="card-grid card-grid--dashboard">
+        <StatCard label="Total payments" value={fmtMoney(totals.totalDispatched)} tone="ink" />
+        <StatCard label="Received payment" value={fmtMoney(totals.totalReceived)} tone="ink" />
         <StatCard label="Outstanding" value={fmtMoney(totals.totalOutstanding)} tone="ink" />
         <StatCard label="Franchises" value={totals.franchiseCount} tone="ink" />
-        <StatCard label="Overdue" value={totals.overdueCount} tone="warn" />
-        <StatCard label="Critical" value={totals.criticalCount} tone="danger" />
+        <StatCard
+          label="Critical"
+          value={totals.criticalCount}
+          tone="danger"
+          onClick={totals.criticalCount > 0 ? onOpenCritical : undefined}
+        />
       </div>
 
-      <div className="two-col">
-        <div className="panel">
-          <div className="panel-head">
-            <h3>Needs attention</h3>
-            {alertFranchises.length > 0 && <button className="link-btn" onClick={onGoAlerts}>View all →</button>}
-          </div>
-          {alertFranchises.length === 0 ? (
-            <EmptyState text="Nothing overdue. Every franchise is within terms." />
-          ) : (
-            <>
-              <table className="ledger ledger--desktop">
-                <tbody>
-                  {alertFranchises.slice(0, 6).map((f) => (
-                    <tr key={f.id} onClick={() => onOpenFranchise(f.id)} className="clickable">
-                      <td>
-                        <div className="cell-title">{f.name}</div>
-                        <div className="cell-sub">{f.orderCount} deliveries</div>
-                      </td>
-                      <td className="num">{fmtMoney(f.totalDue)}</td>
-                      <td className="num muted">{f.daysOverdue}d late</td>
-                      <td><Stamp status={f.status} /></td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-              <div className="mobile-card-list mobile-card-list--compact">
-                {alertFranchises.slice(0, 6).map((f) => (
-                  <article
-                    key={f.id}
-                    className="mobile-card clickable"
-                    onClick={() => onOpenFranchise(f.id)}
-                  >
-                    <div className="mobile-card-head">
-                      <div>
-                        <div className="cell-title">{f.name}</div>
-                        <div className="cell-sub">{f.orderCount} deliveries</div>
-                      </div>
-                      <Stamp status={f.status} />
-                    </div>
-                    <div className="mobile-card-stats mobile-card-stats--2">
-                      <div className="mobile-stat">
-                        <span className="mobile-stat-label">Due</span>
-                        <span className="mobile-stat-value">{fmtMoney(f.totalDue)}</span>
-                      </div>
-                      <div className="mobile-stat">
-                        <span className="mobile-stat-label">Late</span>
-                        <span className="mobile-stat-value muted">{f.daysOverdue}d</span>
-                      </div>
-                    </div>
-                  </article>
-                ))}
-              </div>
-            </>
-          )}
-        </div>
+      <DashboardBusinessChart orders={orders} payments={payments} />
 
-        <div className="panel">
-          <div className="panel-head"><h3>Recent activity</h3></div>
-          {activityLog.length === 0 ? (
-            <EmptyState text="No activity logged yet." />
-          ) : (
-            <ul className="activity-feed">
-              {activityLog.slice(0, 8).map((a) => (
-                <li key={a.id}>
-                  <span className="act-user">{a.user}</span>
-                  <span className="act-detail">{a.details}</span>
-                  <span className="act-time">{new Date(a.timestamp).toLocaleString("en-IN", { day: "2-digit", month: "short", hour: "2-digit", minute: "2-digit" })}</span>
-                </li>
-              ))}
-            </ul>
-          )}
-        </div>
-      </div>
+      <DashboardPeriodReport orders={orders} payments={payments} franchises={franchises} />
     </div>
   );
 }

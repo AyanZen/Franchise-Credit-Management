@@ -39,6 +39,7 @@ export function usePortalData() {
   const [showAddUser, setShowAddUser] = useState(false);
   const [search, setSearch] = useState("");
   const [toast, setToast] = useState(null);
+  const [alertFilter, setAlertFilter] = useState("all");
 
   const setters = {
     setFranchises, setOrders, setPayments, setReminders,
@@ -115,10 +116,32 @@ export function usePortalData() {
 
   const totals = useMemo(() => {
     const totalOutstanding = franchiseSummaries.reduce((s, f) => s + f.totalDue, 0);
-    const overdueCount = franchiseSummaries.filter((f) => f.status === "overdue").length;
+    const totalDispatched = franchiseSummaries.reduce((s, f) => s + f.totalTaken, 0);
+    const totalReceived = franchiseSummaries.reduce((s, f) => s + f.totalPaid, 0);
     const criticalCount = franchiseSummaries.filter((f) => f.status === "critical").length;
-    return { totalOutstanding, overdueCount, criticalCount, franchiseCount: franchises.length };
+    return {
+      totalDispatched,
+      totalReceived,
+      totalOutstanding,
+      criticalCount,
+      franchiseCount: franchises.length,
+    };
   }, [franchiseSummaries, franchises]);
+
+  function openAlerts(filter = "all") {
+    setAlertFilter(filter);
+    setView("alerts");
+  }
+
+  function navigateToView(nextView) {
+    setSelectedFranchiseId(null);
+    if (nextView === "alerts") {
+      openAlerts("all");
+      return;
+    }
+    setAlertFilter("all");
+    setView(nextView);
+  }
 
   function reminderCountFor(franchiseId) {
     return reminders.filter((r) => r.franchiseId === franchiseId).length;
@@ -324,6 +347,9 @@ export function usePortalData() {
     currentUser,
     view,
     setView,
+    navigateToView,
+    openAlerts,
+    alertFilter,
     selectedFranchiseId,
     setSelectedFranchiseId,
     showAddFranchise,
@@ -348,6 +374,9 @@ export function usePortalData() {
     toast,
     showToast,
     ordersByFranchise,
+    orders,
+    payments,
+    franchises,
     paymentsByFranchise,
     franchiseSummaries,
     alertFranchises,

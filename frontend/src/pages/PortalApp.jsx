@@ -27,6 +27,9 @@ export default function PortalApp() {
     currentUser,
     view,
     setView,
+    navigateToView,
+    openAlerts,
+    alertFilter,
     selectedFranchiseId,
     setSelectedFranchiseId,
     showAddFranchise,
@@ -40,6 +43,9 @@ export default function PortalApp() {
     openPaymentForm,
     closePaymentForm,
     ordersByFranchise,
+    orders,
+    payments,
+    franchises,
     editOrder,
     setEditOrder,
     editPayment,
@@ -142,10 +148,10 @@ export default function PortalApp() {
           />
           <Sidebar
             view={view}
-            setView={(v) => { setView(v); setSelectedFranchiseId(null); }}
+            setView={navigateToView}
             currentUser={currentUser}
             onLogout={handleLogout}
-            alertCount={totals.criticalCount + totals.overdueCount}
+            alertCount={alertFranchises.length}
             mobileOpen={menuOpen}
             onClose={() => setMenuOpen(false)}
             theme={theme}
@@ -161,10 +167,10 @@ export default function PortalApp() {
             {view === "dashboard" && (
               <Dashboard
                 totals={totals}
-                alertFranchises={alertFranchises}
-                activityLog={activityLog}
-                onOpenFranchise={(id) => { setSelectedFranchiseId(id); setView("franchiseDetail"); }}
-                onGoAlerts={() => setView("alerts")}
+                orders={orders}
+                payments={payments}
+                franchises={franchises}
+                onOpenCritical={() => openAlerts("critical")}
               />
             )}
 
@@ -205,6 +211,8 @@ export default function PortalApp() {
             {view === "alerts" && (
               <AlertsView
                 alertFranchises={alertFranchises}
+                filter={alertFilter}
+                onClearFilter={() => openAlerts("all")}
                 onOpenFranchise={(id) => { setSelectedFranchiseId(id); setView("franchiseDetail"); }}
                 onSendReminder={sendReminder}
                 lastReminderFor={lastReminderFor}

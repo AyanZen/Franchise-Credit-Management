@@ -515,6 +515,10 @@
   margin-bottom: 28px;
 }
 
+.card-grid--dashboard {
+  grid-template-columns: repeat(5, 1fr);
+}
+
 .stat-card {
   background: var(--card);
   border: 1px solid var(--line);
@@ -527,6 +531,19 @@
   border-color: rgba(232, 200, 88, 0.3);
   box-shadow: 0 8px 28px rgba(0, 0, 0, 0.22);
   transform: translateY(-2px);
+}
+
+.stat-card--clickable {
+  width: 100%;
+  text-align: left;
+  cursor: pointer;
+  font: inherit;
+  color: inherit;
+}
+
+.stat-card--clickable:focus-visible {
+  outline: 2px solid rgba(232, 200, 88, 0.65);
+  outline-offset: 2px;
 }
 
 .stat-value {
@@ -577,6 +594,112 @@
   font-weight: 600;
   margin: 0;
   color: var(--text);
+}
+
+.dashboard-period {
+  margin-bottom: 28px;
+}
+
+.dashboard-business-chart {
+  margin-bottom: 28px;
+  background: var(--card);
+  border-color: var(--line);
+}
+
+.dashboard-period-head {
+  align-items: flex-start;
+  gap: 16px;
+}
+
+.dashboard-period-sub {
+  margin: 4px 0 0;
+  color: var(--mute);
+  font-size: 13px;
+}
+
+.dashboard-export-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  white-space: nowrap;
+}
+
+.dashboard-period-controls {
+  padding: 0 20px 18px;
+  display: grid;
+  gap: 14px;
+}
+
+.segmented-control {
+  display: inline-flex;
+  gap: 4px;
+  padding: 4px;
+  border-radius: 999px;
+  background: var(--bg);
+  border: 1px solid var(--line);
+  width: fit-content;
+  max-width: 100%;
+  flex-wrap: wrap;
+}
+
+.segmented-control-btn {
+  border: 0;
+  background: transparent;
+  color: var(--mute);
+  padding: 8px 14px;
+  border-radius: 999px;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.2s, color 0.2s;
+}
+
+.segmented-control-btn.is-active {
+  background: var(--card);
+  color: var(--text);
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.08);
+}
+
+.month-chip-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.month-chip {
+  border: 1px solid var(--line);
+  background: var(--bg);
+  color: var(--text);
+  border-radius: 999px;
+  padding: 7px 12px;
+  font-size: 13px;
+  cursor: pointer;
+  transition: border-color 0.2s, background 0.2s, color 0.2s;
+}
+
+.month-chip.is-active {
+  border-color: rgba(232, 200, 88, 0.55);
+  background: rgba(232, 200, 88, 0.16);
+  color: var(--text);
+}
+
+.card-grid--compact {
+  margin: 0 20px 18px;
+}
+
+.dashboard-period-tables {
+  padding: 0 20px 16px;
+  display: grid;
+  gap: 20px;
+}
+
+.dashboard-period-table-wrap h4 {
+  margin: 0 0 10px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--mute);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
 }
 
 .form-panel { padding: 24px 26px; }
@@ -1322,6 +1445,7 @@
 /* ── Responsive ── */
 @media (max-width: 1024px) {
   .card-grid { grid-template-columns: repeat(2, 1fr); }
+  .card-grid--dashboard { grid-template-columns: repeat(2, 1fr); }
   .two-col { grid-template-columns: 1fr; }
 }
 
@@ -1463,6 +1587,35 @@
     grid-template-columns: 1fr 1fr;
     gap: 12px;
     margin-bottom: 20px;
+  }
+
+  .dashboard-period-head {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .dashboard-export-btn {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .card-grid--compact {
+    margin-left: 16px;
+    margin-right: 16px;
+  }
+
+  .dashboard-period-controls,
+  .dashboard-period-tables {
+    padding-left: 16px;
+    padding-right: 16px;
+  }
+
+  .segmented-control {
+    width: 100%;
+  }
+
+  .segmented-control-btn {
+    flex: 1;
   }
 
   .stat-card {

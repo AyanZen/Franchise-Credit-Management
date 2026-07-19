@@ -4,13 +4,53 @@ import EmptyState from "../common/EmptyState";
 import PageHeader from "../common/PageHeader";
 import Stamp from "../common/Stamp";
 
-export default function AlertsView({ alertFranchises, onOpenFranchise, onSendReminder, lastReminderFor }) {
+const FILTER_META = {
+  all: {
+    title: "Alerts",
+    subtitle: "Franchises past their payment term, worst first.",
+    empty: "Nothing to flag. All franchises are within terms.",
+  },
+  critical: {
+    title: "Critical alerts",
+    subtitle: "Franchises past the grace period on outstanding balance.",
+    empty: "No critical franchises right now.",
+  },
+  overdue: {
+    title: "Overdue alerts",
+    subtitle: "Franchises past due date but still within the grace period.",
+    empty: "No overdue franchises right now.",
+  },
+};
+
+export default function AlertsView({
+  alertFranchises,
+  filter = "all",
+  onClearFilter,
+  onOpenFranchise,
+  onSendReminder,
+  lastReminderFor,
+}) {
+  const meta = FILTER_META[filter] || FILTER_META.all;
+  const franchises = filter === "all"
+    ? alertFranchises
+    : alertFranchises.filter((f) => f.status === filter);
+
   return (
     <div>
-      <PageHeader title="Alerts" subtitle="Franchises past their payment term, worst first." />
+      <PageHeader
+        title={meta.title}
+        subtitle={meta.subtitle}
+        action={
+          filter !== "all" ? (
+            <button type="button" className="btn btn-ghost btn-sm" onClick={onClearFilter}>
+              Show all alerts
+            </button>
+          ) : null
+        }
+      />
       <div className="panel">
-        {alertFranchises.length === 0 ? (
-          <EmptyState text="Nothing to flag. All franchises are within terms." />
+        {franchises.length === 0 ? (
+          <EmptyState text={meta.empty} />
         ) : (
           <>
             <table className="ledger ledger--desktop">
@@ -25,7 +65,7 @@ export default function AlertsView({ alertFranchises, onOpenFranchise, onSendRem
                 </tr>
               </thead>
               <tbody>
-                {alertFranchises.map((f) => {
+                {franchises.map((f) => {
                   const last = lastReminderFor(f.id);
                   return (
                     <tr key={f.id}>
@@ -45,7 +85,7 @@ export default function AlertsView({ alertFranchises, onOpenFranchise, onSendRem
             </table>
 
             <div className="mobile-card-list">
-              {alertFranchises.map((f) => {
+              {franchises.map((f) => {
                 const last = lastReminderFor(f.id);
                 return (
                   <article key={f.id} className="mobile-card">
