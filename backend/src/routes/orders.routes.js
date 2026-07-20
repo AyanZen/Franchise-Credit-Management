@@ -2,7 +2,7 @@ import { Router } from "express";
 import prisma from "../lib/prisma.js";
 import { auth, requireAdmin } from "../middleware/auth.js";
 import { logActivity } from "../utils/helpers.js";
-import { formatBillNo, normalizeBillNo, parseBillSequence, suggestBillPrefix, billNoMatchesPrefix } from "../utils/billNo.js";
+import { normalizeBillNo, parseBillSequence, suggestBillPrefix } from "../utils/billNo.js";
 import { trimString } from "../utils/sanitize.js";
 import { safeErrorMessage } from "../utils/errors.js";
 
@@ -54,14 +54,6 @@ router.get("/check", auth, async (req, res) => {
     const franchise = await prisma.franchise.findUnique({ where: { id: franchiseId } });
     if (!franchise) return res.status(404).json({ error: "Franchise not found." });
 
-    const prefix = franchise.billPrefix || suggestBillPrefix(franchise.name);
-    if (!billNoMatchesPrefix(billNo, prefix)) {
-      return res.status(400).json({
-        valid: false,
-        error: `Bill number must start with this franchise's prefix "${prefix}" (e.g. ${formatBillNo(prefix, franchise.nextBillSeq)}).`,
-      });
-    }
-
     const existing = await prisma.order.findFirst({ where: { franchiseId, billNo } });
     if (existing) {
       return res.status(409).json({
@@ -71,7 +63,7 @@ router.get("/check", auth, async (req, res) => {
       });
     }
 
-    res.json({ valid: true, available: true, billNo, prefix });
+    res.json({ valid: true, available: true, billNo });
   } catch (err) {
     console.error("[orders] check failed:", err);
     res.status(500).json({ error: safeErrorMessage(err) });
@@ -86,26 +78,12 @@ router.post("/", auth, async (req, res) => {
     if (!date) return res.status(400).json({ error: "Dispatch date is required." });
 
     const order = await prisma.$transaction(async (tx) => {
-      let franchise = await tx.franchise.findUnique({ where: { id: franchiseId } });
+      const franchise = await tx.franchise.findUnique({ where: { id: franchiseId } });
       if (!franchise) throw Object.assign(new Error("Franchise not found."), { status: 404 });
 
-      if (!franchise.billPrefix) {
-        const prefix = suggestBillPrefix(franchise.name);
-        franchise = await tx.franchise.update({
-          where: { id: franchiseId },
-          data: { billPrefix: prefix },
-        });
-      }
-
-      const prefix = franchise.billPrefix;
-      const autoBillNo = formatBillNo(prefix, franchise.nextBillSeq);
-      const billNo = rawBillNo ? normalizeBillNo(rawBillNo) : autoBillNo;
-
-      if (!billNoMatchesPrefix(billNo, prefix)) {
-        throw Object.assign(
-          new Error(`Bill number must use prefix "${prefix}" (e.g. ${autoBillNo}).`),
-          { status: 400 }
-        );
+      const billNo = normalizeBillNo(rawBillNo);
+      if (!billNo) {
+        throw Object.assign(new Error("Bill number is required."), { status: 400 });
       }
 
       const duplicate = await tx.order.findFirst({ where: { franchiseId, billNo } });
@@ -129,11 +107,14 @@ router.post("/", auth, async (req, res) => {
         },
       });
 
-      const usedSeq = parseBillSequence(billNo, prefix) || franchise.nextBillSeq;
-      await tx.franchise.update({
-        where: { id: franchiseId },
-        data: { nextBillSeq: Math.max(franchise.nextBillSeq, usedSeq + 1) },
-      });
+      const prefix = franchise.billPrefix || suggestBillPrefix(franchise.name);
+      const usedSeq = parseBillSequence(billNo, prefix);
+      if (usedSeq != null) {
+        await tx.franchise.update({
+          where: { id: franchiseId },
+          data: { nextBillSeq: Math.max(franchise.nextBillSeq, usedSeq + 1) },
+        });
+      }
 
       return { created, franchise };
     });

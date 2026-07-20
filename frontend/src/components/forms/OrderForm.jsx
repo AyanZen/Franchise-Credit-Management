@@ -1,6 +1,6 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useRef, useState } from "react";
 import { todayStr } from "../../utils/date";
-import { formatBillNoPreview, normalizeBillNo, suggestBillPrefix } from "@/lib/billNo";
+import { normalizeBillNo } from "@/lib/billNo";
 import { ordersApi } from "@/services/api";
 import Modal from "../common/Modal";
 
@@ -10,30 +10,12 @@ export default function OrderForm({ settings, franchise, initial, onClose, onSub
   const [date, setDate] = useState(initial?.date || todayStr());
   const [termDays, setTermDays] = useState(initial?.termDays ?? settings.termDays);
   const [notes, setNotes] = useState(initial?.notes || "");
+  const [billNo, setBillNo] = useState(initial?.billNo || "");
   const [err, setErr] = useState("");
   const [busy, setBusy] = useState(false);
   const [billChecking, setBillChecking] = useState(false);
   const [billValid, setBillValid] = useState(false);
   const billValidateSeq = useRef(0);
-
-  const billPrefix = useMemo(
-    () => franchise?.billPrefix || suggestBillPrefix(franchise?.name || ""),
-    [franchise]
-  );
-
-  const defaultBillNo = useMemo(
-    () => formatBillNoPreview(billPrefix, franchise?.nextBillSeq ?? 1),
-    [billPrefix, franchise?.nextBillSeq]
-  );
-
-  const [billNo, setBillNo] = useState(initial?.billNo || defaultBillNo);
-
-  useEffect(() => {
-    if (!initial && defaultBillNo) {
-      setBillNo(defaultBillNo);
-      setBillValid(false);
-    }
-  }, [defaultBillNo, initial]);
 
   async function validateBillNo(value = billNo) {
     const normalized = normalizeBillNo(value);
@@ -68,7 +50,7 @@ export default function OrderForm({ settings, franchise, initial, onClose, onSub
   }
 
   async function handleBillBlur() {
-    if (initial) return;
+    if (initial || !billNo.trim()) return;
     const result = await validateBillNo();
     if (result.stale) return;
     if (!result.ok) {
@@ -119,7 +101,7 @@ export default function OrderForm({ settings, franchise, initial, onClose, onSub
       <form onSubmit={submit}>
         {franchise?.name && !initial && (
           <p className="hint-text" style={{ marginTop: 0, marginBottom: 12 }}>
-            Franchise: <strong>{franchise.name}</strong> · Bill prefix <span className="font-mono">{billPrefix}</span>
+            Franchise: <strong>{franchise.name}</strong>
           </p>
         )}
 
@@ -134,7 +116,7 @@ export default function OrderForm({ settings, franchise, initial, onClose, onSub
             setErr("");
           }}
           onBlur={handleBillBlur}
-          placeholder={defaultBillNo || `${billPrefix}01`}
+          placeholder="Enter your bill number"
           readOnly={Boolean(initial?.billNo)}
           autoFocus={!initial}
         />
@@ -144,9 +126,8 @@ export default function OrderForm({ settings, franchise, initial, onClose, onSub
             {!billChecking && billValid && (
               <span className="text-[var(--ok)]">Bill number is available.</span>
             )}
-            {!billChecking && !billValid && (
-              <>Auto-suggested next number is <span className="font-mono font-medium">{defaultBillNo}</span>. Must use prefix {billPrefix}.</>
-            )}
+            {!billChecking && !billValid && billNo.trim() && "This bill number is not checked yet."}
+            {!billChecking && !billValid && !billNo.trim() && "Type your bill number. It must not already exist for this franchise."}
           </p>
         )}
 

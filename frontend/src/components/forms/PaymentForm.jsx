@@ -217,7 +217,7 @@ export default function PaymentForm({
                 if (!billLocked) setResolvedOrder(null);
               }}
               onBlur={handleBillBlur}
-              placeholder={franchise?.billPrefix ? `${franchise.billPrefix}01` : "e.g. XYZ01"}
+              placeholder="Enter bill number"
               readOnly={billLocked}
               autoFocus={!billLocked}
             />
@@ -227,6 +227,9 @@ export default function PaymentForm({
             {activeOrder && !billChecking && (
               <p className="hint-text mt-1">
                 {activeOrder.materials || "Materials dispatch"} · {fmtDate(activeOrder.date)} · {fmtMoney(activeOrder.amount)}
+                {activeOrder.due != null && activeOrder.due > 0 && (
+                  <> · Balance due {fmtMoney(activeOrder.due)}</>
+                )}
               </p>
             )}
           </div>
